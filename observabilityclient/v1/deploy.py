@@ -166,7 +166,7 @@ class Setup(base.ObservabilityBaseCommand):
         for compnt in parsed_args.components:
             playbook = '%s.yml' % compnt
             try:
-                self._run_playbook(playbook, INVENTORY,
+                self._run_playbook(playbook, inventory,
                                    parsed_args=parsed_args)
             except OSError as ex:
                 print('Failed to load playbook file: %s' % ex)

@@ -23,9 +23,10 @@ git clone https://github.com/infrawatch/osp-observability-ansible
 sudo mkdir /usr/share/osp-observability
 sudo ln -s `pwd`/osp-observability-ansible/playbooks /usr/share/osp-observability/playbooks
 sudo ln -s `pwd`/osp-observability-ansible/roles/spawn_container /usr/share/ansible/roles/spawn_container
+sudo ln -s `pwd`/osp-observability-ansible/roles/osp_observability /usr/share/ansible/roles/osp_observability
 ```
 
-Deploy and overcloud and enable write_prometheus plugin for collectd. Create a THT environment file to enable the plugin with the collectd service:
+Create a THT environment file to enable the write_prometheus plugin for the collectd service. Then redeploy your overcloud and include this new file:
 
 ```
 mkdir -p ~/templates/observability
@@ -43,9 +44,16 @@ parameter_defaults:
 EOF
 ```
 
-Discover the available endpoints:
+After deployment of your cloud you can discover endpoints available for scraping:
 
 ```
-# after deployment of your cloud you can discover endpoints available for scraping
+source stackrc
 openstack observability discover --stack-name=standalone
+```
+
+Deploy prometheus:
+
+```
+echo "prometheus_remote_write: ['http://someurl', 'http://otherurl']" > test_params.yaml
+openstack observability setup prometheus_agent --config ./test_params.yaml
 ```

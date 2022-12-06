@@ -54,6 +54,18 @@ openstack observability discover --stack-name=standalone
 Deploy prometheus:
 
 ```
-echo "prometheus_remote_write: ['http://someurl', 'http://otherurl']" > test_params.yaml
-openstack observability setup prometheus_agent --config ./test_params.yaml
+$ cat test_params.yaml
+prometheus_remote_write:
+  stf:
+    url: https://default-prometheus-proxy-service-telemetry.apps.FAKE.ocp.cluster/api/v1/write
+    basic_user: internal
+    basic_pass: Pl4iNt3xTp4a55
+    ca_cert: |
+      -----BEGIN CERTIFICATE-----
+      ABCDEFGHIJKLMNOPQRSTUVWXYZ
+      -----END CERTIFICATE-----
+  not-stf:
+    url: http://prometheus-rw.example.com/api/v1/write
+
+$ openstack observability setup prometheus_agent --config ./test_params.yaml
 ```

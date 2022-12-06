@@ -26,6 +26,7 @@ sudo ln -s `pwd`/osp-observability-ansible/roles/spawn_container /usr/share/ansi
 sudo ln -s `pwd`/osp-observability-ansible/roles/osp_observability /usr/share/ansible/roles/osp_observability
 ```
 
+### Enable collectd write_prometheus
 Create a THT environment file to enable the write_prometheus plugin for the collectd service. Then redeploy your overcloud and include this new file:
 
 ```
@@ -44,6 +45,7 @@ parameter_defaults:
 EOF
 ```
 
+### Discover endpoints
 After deployment of your cloud you can discover endpoints available for scraping:
 
 ```
@@ -51,7 +53,8 @@ source stackrc
 openstack observability discover --stack-name=standalone
 ```
 
-Deploy prometheus:
+### Deploy prometheus:
+Create a config file and run the setup command
 
 ```
 $ cat test_params.yaml

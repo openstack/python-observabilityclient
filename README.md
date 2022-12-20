@@ -26,6 +26,7 @@ sudo ln -s `pwd`/osp-observability-ansible/roles/spawn_container /usr/share/ansi
 sudo ln -s `pwd`/osp-observability-ansible/roles/osp_observability /usr/share/ansible/roles/osp_observability
 ```
 
+### Enable collectd write_prometheus
 Create a THT environment file to enable the write_prometheus plugin for the collectd service. Then redeploy your overcloud and include this new file:
 
 ```
@@ -44,6 +45,7 @@ parameter_defaults:
 EOF
 ```
 
+### Discover endpoints
 After deployment of your cloud you can discover endpoints available for scraping:
 
 ```
@@ -51,9 +53,22 @@ source stackrc
 openstack observability discover --stack-name=standalone
 ```
 
-Deploy prometheus:
+### Deploy prometheus:
+Create a config file and run the setup command
 
 ```
-echo "prometheus_remote_write: ['http://someurl', 'http://otherurl']" > test_params.yaml
-openstack observability setup prometheus_agent --config ./test_params.yaml
+$ cat test_params.yaml
+prometheus_remote_write:
+  stf:
+    url: https://default-prometheus-proxy-service-telemetry.apps.FAKE.ocp.cluster/api/v1/write
+    basic_user: internal
+    basic_pass: Pl4iNt3xTp4a55
+    ca_cert: |
+      -----BEGIN CERTIFICATE-----
+      ABCDEFGHIJKLMNOPQRSTUVWXYZ
+      -----END CERTIFICATE-----
+  not-stf:
+    url: http://prometheus-rw.example.com/api/v1/write
+
+$ openstack observability setup prometheus_agent --config ./test_params.yaml
 ```

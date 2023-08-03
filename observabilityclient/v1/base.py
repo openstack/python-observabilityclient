@@ -13,24 +13,12 @@
 #   under the License.
 #
 
-import os
-import shutil
-
 from osc_lib.command import command
 from osc_lib.i18n import _
 
-from observabilityclient.utils import runner
-from observabilityclient.utils import shell
-
-
-OBSLIBDIR = shell.file_check('/usr/share/osp-observability', 'directory')
-OBSWRKDIR = shell.file_check(
-    os.path.expanduser('~/.osp-observability'), 'directory'
-)
-
 
 class ObservabilityBaseCommand(command.Command):
-    """Base class for observability commands."""
+    """Base class for metric commands."""
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
@@ -44,68 +32,50 @@ class ObservabilityBaseCommand(command.Command):
             action='store_true',
             help=_("Disable cleanup of temporary files.")
         )
+
+        # TODO(jwysogla): Should this be restricted somehow?
         parser.add_argument(
-            '--workdir',
-            default=OBSWRKDIR,
-            help=_("Working directory for observability commands.")
-        )
-        parser.add_argument(
-            '--moduledir',
-            default=None,
-            help=_("Directory with additional Ansible modules.")
-        )
-        parser.add_argument(
-            '--ssh-user',
-            default='heat-admin',
-            help=_("Username to be used for SSH connection.")
-        )
-        parser.add_argument(
-            '--ssh-key',
-            default='/home/stack/.ssh/id_rsa',
-            help=_("SSH private key to be used for SSH connection.")
-        )
-        parser.add_argument(
-            '--ansible-cfg',
-            default=os.path.join(OBSWRKDIR, 'ansible.cfg'),
-            help=_("Path to Ansible configuration.")
-        )
-        parser.add_argument(
-            '--config',
-            default=None,
-            help=_("Path to playbook configuration file.")
+            '--disable-rbac',
+            action='store_true',
+            help=_("Disable rbac injection")
         )
         return parser
 
-    def _run_playbook(self, playbook, inventory, parsed_args):
-        """Run Ansible raw playbook"""
-        playbook = os.path.join(OBSLIBDIR, 'playbooks', playbook)
-        with shell.tempdir(parsed_args.workdir,
-                           prefix=os.path.splitext(playbook)[0],
-                           clear=not parsed_args.messy) as tmpdir:
-            # copy extravars file for the playbook run
-            if parsed_args.config:
-                envdir = shell.file_check(os.path.join(tmpdir, 'env'),
-                                          'directory')
-                shutil.copy(parsed_args.config,
-                            os.path.join(envdir, 'extravars'))
-            # copy inventory file for the playbook run
-            shutil.copy(inventory, os.path.join(tmpdir, 'inventory'))
-            # run playbook
-            rnr = runner.AnsibleRunner(tmpdir,
-                                       moduledir=parsed_args.moduledir,
-                                       ssh_user=parsed_args.ssh_user,
-                                       ssh_key=parsed_args.ssh_key,
-                                       ansible_cfg=parsed_args.ansible_cfg)
-            if parsed_args.messy:
-                print("Running playbook %s" % playbook)
-            rnr.run(playbook, debug=parsed_args.dev)
-            rnr.destroy(clear=not parsed_args.messy)
 
-    def _execute(self, command, parsed_args):
-        """Execute local command"""
-        with shell.tempdir(parsed_args.workdir, prefix='exec',
-                           clear=not parsed_args.messy) as tmpdir:
-            rc, out, err = shell.execute(command, workdir=tmpdir,
-                                         can_fail=parsed_args.dev,
-                                         use_shell=True)
-        return rc, out, err
+class Manager(object):
+    """Base class for the python api."""
+    DEFAULT_HEADERS = {
+        "Accept": "application/json",
+    }
+
+    def __init__(self, client):
+        self.client = client
+        self.prom = client.prometheus_client
+
+    def _set_default_headers(self, kwargs):
+        headers = kwargs.get('headers', {})
+        for k, v in self.DEFAULT_HEADERS.items():
+            if k not in headers:
+                headers[k] = v
+        kwargs['headers'] = headers
+        return kwargs
+
+    def _get(self, *args, **kwargs):
+        self._set_default_headers(kwargs)
+        return self.client.api.get(*args, **kwargs)
+
+    def _post(self, *args, **kwargs):
+        self._set_default_headers(kwargs)
+        return self.client.api.post(*args, **kwargs)
+
+    def _put(self, *args, **kwargs):
+        self._set_default_headers(kwargs)
+        return self.client.api.put(*args, **kwargs)
+
+    def _patch(self, *args, **kwargs):
+        self._set_default_headers(kwargs)
+        return self.client.api.patch(*args, **kwargs)
+
+    def _delete(self, *args, **kwargs):
+        self._set_default_headers(kwargs)
+        return self.client.api.delete(*args, **kwargs)

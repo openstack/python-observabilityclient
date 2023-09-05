@@ -12,9 +12,11 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-from keystoneauth1.exceptions.auth_plugins import MissingAuthPlugin
-from observabilityclient.utils.metric_utils import format_labels
 import re
+
+from keystoneauth1.exceptions.auth_plugins import MissingAuthPlugin
+
+from observabilityclient.utils.metric_utils import format_labels
 
 
 class ObservabilityRbacError(Exception):
@@ -29,14 +31,14 @@ class Rbac():
         try:
             self.project_id = self.session.get_project_id()
             self.default_labels = {
-                    "project": self.project_id
-                    }
+                "project": self.project_id
+            }
             self.rbac_init_successful = True
         except MissingAuthPlugin:
             self.project_id = None
             self.default_labels = {
-                    "project": "no-project"
-                    }
+                "project": "no-project"
+            }
             self.rbac_init_successful = False
 
     def _find_label_value_end(self, query, start, quote_char):
@@ -48,13 +50,22 @@ class Rbac():
         # returns the quote position or -1
         return end
 
-    def _find_label_pair_end(self, query, start):
+    def _find_match_operator(self, query, start):
         eq_sign_pos = query.find('=', start)
+        tilde_pos = query.find('~', start)
+        if eq_sign_pos == -1:
+            return tilde_pos
+        if tilde_pos == -1:
+            return eq_sign_pos
+        return min(eq_sign_pos, tilde_pos)
+
+    def _find_label_pair_end(self, query, start):
+        match_operator_pos = self._find_match_operator(query, start)
         quote_char = "'"
-        quote_start_pos = query.find(quote_char, eq_sign_pos)
+        quote_start_pos = query.find(quote_char, match_operator_pos)
         if quote_start_pos == -1:
             quote_char = '"'
-            quote_start_pos = query.find(quote_char, eq_sign_pos)
+            quote_start_pos = query.find(quote_char, match_operator_pos)
         end = self._find_label_value_end(query, quote_start_pos, quote_char)
         # returns the pair end or -1
         return end
@@ -64,18 +75,19 @@ class Rbac():
         while nearest_curly_brace_pos != -1:
             pair_end = self._find_label_pair_end(query, start)
             nearest_curly_brace_pos = query.find("}", pair_end)
-            nearest_eq_sign_pos = query.find("=", pair_end)
-            if (nearest_curly_brace_pos < nearest_eq_sign_pos or
-                    nearest_eq_sign_pos == -1):
-                # If we have "}" before the nearest "=",
+            nearest_match_operator_pos = self._find_match_operator(query,
+                                                                   pair_end)
+            if (nearest_curly_brace_pos < nearest_match_operator_pos or
+                    nearest_match_operator_pos == -1):
+                # If we have "}" before the nearest "=" or "~",
                 # then we must be at the end of the label section
-                # and the "=" is a part of the next section.
+                # and the "=" or "~" is a part of the next section.
                 return nearest_curly_brace_pos
             start = pair_end
         return -1
 
     def enrich_query(self, query, disable_rbac=False):
-        """Used to add rbac labels to queries
+        """Add rbac labels to queries.
 
         :param query: The query to enrich
         :type query: str
@@ -121,7 +133,7 @@ class Rbac():
         return query
 
     def append_rbac(self, query, disable_rbac=False):
-        """Used to append rbac labels to queries
+        """Append rbac labels to queries.
 
         It's a simplified and faster version of enrich_query(). This just
         appends the labels at the end of the query string. For proper handling

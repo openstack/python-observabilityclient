@@ -18,14 +18,14 @@ from observabilityclient.v1 import base
 
 class QueryManager(base.Manager):
     def list(self, disable_rbac=False):
-        """Lists metric names
+        """List metric names.
 
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
         """
         if disable_rbac or self.client.rbac.disable_rbac:
             metric_names = self.prom.label_values("__name__")
-            return metric_names
+            return sorted(metric_names)
         else:
             match = f"{{{format_labels(self.client.rbac.default_labels)}}}"
             metrics = self.prom.series(match)
@@ -35,7 +35,7 @@ class QueryManager(base.Manager):
             return sorted(unique_metric_names)
 
     def show(self, name, disable_rbac=False):
-        """Shows current values for metrics of a specified name
+        """Show current values for metrics of a specified name.
 
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
@@ -46,7 +46,7 @@ class QueryManager(base.Manager):
         return self.prom.query(last_metric_query)
 
     def query(self, query, disable_rbac=False):
-        """Sends a query to prometheus
+        """Send a query to prometheus.
 
         The query can be any PromQL query. Labels for enforcing
         rbac will be added to all of the metric name inside the query.
@@ -56,18 +56,18 @@ class QueryManager(base.Manager):
         query("sum(name1) - sum(name2{label1='value'})")
         will result in a query string like this:
         "sum(name1{rbac='rbac_value'}) -
-            sum(name2{label1='value', rbac='rbac_value'})"
+        sum(name2{label1='value', rbac='rbac_value'})"
 
         :param query: Custom query string
         :type query: str
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
         """
-        query = self.client.rbac.enrich_query(query, disable_rbac)
+        query = self.client.rbac.enrich_query(query, disable_rbac=disable_rbac)
         return self.prom.query(query)
 
     def delete(self, matches, start=None, end=None):
-        """Deletes metrics from Prometheus
+        """Delete metrics from Prometheus.
 
         The metrics aren't deleted immediately. Do a call to clean_tombstones()
         to speed up the deletion. If start and end isn't specified, then
@@ -88,9 +88,9 @@ class QueryManager(base.Manager):
         return self.prom.delete(matches, start, end)
 
     def clean_tombstones(self):
-        """Instructs prometheus to clean tombstones"""
+        """Instruct prometheus to clean tombstones."""
         return self.prom.clean_tombstones()
 
     def snapshot(self):
-        "Creates a snapshot of the current data"
+        """Create a snapshot of the current data."""
         return self.prom.snapshot()

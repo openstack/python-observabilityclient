@@ -13,6 +13,7 @@
 #   under the License.
 
 import logging
+
 import requests
 
 
@@ -95,13 +96,12 @@ class PrometheusAPIClient:
         return decoded
 
     def query(self, query):
-        """Sends custom queries to Prometheus
+        """Send custom queries to Prometheus.
 
         :param query: the query to send
         :type query: str
         """
-
-        LOG.debug(f"Querying prometheus with query: {query}")
+        LOG.debug("Querying prometheus with query: %s", query)
         decoded = self._get("query", dict(query=query))
 
         if decoded['data']['resultType'] == 'vector':
@@ -111,38 +111,35 @@ class PrometheusAPIClient:
         return result
 
     def series(self, matches):
-        """Queries the /series/ endpoint of prometheus
+        """Query the /series/ endpoint of prometheus.
 
         :param matches: List of matches to send as parameters
         :type matches: [str]
         """
-
-        LOG.debug(f"Querying prometheus for series with matches: {matches}")
+        LOG.debug("Querying prometheus for series with matches: %s", matches)
         decoded = self._get("series", {"match[]": matches})
 
         return decoded['data']
 
     def labels(self):
-        """Queries the /labels/ endpoint of prometheus, returns list of labels
+        """Query the /labels/ endpoint of prometheus, returns list of labels.
 
         There isn't a way to tell prometheus to restrict
         which labels to return. It's not possible to enforce
         rbac with this for example.
         """
-
         LOG.debug("Querying prometheus for labels")
         decoded = self._get("labels")
 
         return decoded['data']
 
     def label_values(self, label):
-        """Queries prometheus for values of a specified label.
+        """Query prometheus for values of a specified label.
 
         :param label: Name of label for which to return values
         :type label: str
         """
-
-        LOG.debug(f"Querying prometheus for the values of label: {label}")
+        LOG.debug("Querying prometheus for the values of label: %s", label)
         decoded = self._get(f"label/{label}/values")
 
         return decoded['data']
@@ -152,7 +149,7 @@ class PrometheusAPIClient:
     # ---------
 
     def delete(self, matches, start=None, end=None):
-        """Deletes some metrics from prometheus
+        """Delete some metrics from prometheus.
 
         :param matches: List of matches, that specify which metrics to delete
         :type matches [str]
@@ -168,8 +165,7 @@ class PrometheusAPIClient:
         #      way to know if anything got actually deleted.
         #      It does however return 500 code and error msg
         #      if the admin APIs are disabled.
-
-        LOG.debug(f"Deleting metrics from prometheus matching: {matches}")
+        LOG.debug("Deleting metrics from prometheus matching: %s", matches)
         try:
             self._post("admin/tsdb/delete_series", {"match[]": matches,
                                                     "start": start,
@@ -181,8 +177,7 @@ class PrometheusAPIClient:
                 raise exc
 
     def clean_tombstones(self):
-        """Asks prometheus to clean tombstones"""
-
+        """Ask prometheus to clean tombstones."""
         LOG.debug("Cleaning tombstones from prometheus")
         try:
             self._post("admin/tsdb/clean_tombstones")
@@ -193,8 +188,7 @@ class PrometheusAPIClient:
                 raise exc
 
     def snapshot(self):
-        """Creates a snapshot and returns the file name containing the data"""
-
+        """Create a snapshot and return the file name containing the data."""
         LOG.debug("Taking prometheus data snapshot")
         ret = self._post("admin/tsdb/snapshot")
         return ret["data"]["name"]

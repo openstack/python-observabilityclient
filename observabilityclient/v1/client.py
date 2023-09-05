@@ -20,7 +20,7 @@ from observabilityclient.v1 import rbac
 
 
 class Client(object):
-    """Client for the observabilityclient api"""
+    """Client for the observabilityclient api."""
 
     def __init__(self, session=None, adapter_options=None,
                  session_options=None, disable_rbac=False):

@@ -14,9 +14,11 @@
 
 import logging
 import os
+
 import yaml
 
 from observabilityclient.prometheus_client import PrometheusAPIClient
+
 
 DEFAULT_CONFIG_LOCATIONS = [os.environ["HOME"] + "/.config/openstack/",
                             "/etc/openstack/"]
@@ -30,12 +32,12 @@ class ConfigurationError(Exception):
 
 def get_config_file():
     if os.path.exists(CONFIG_FILE_NAME):
-        LOG.debug(f"Using {CONFIG_FILE_NAME} as prometheus configuration")
+        LOG.debug("Using %s as prometheus configuration", CONFIG_FILE_NAME)
         return open(CONFIG_FILE_NAME, "r")
     for path in DEFAULT_CONFIG_LOCATIONS:
         full_filename = path + CONFIG_FILE_NAME
         if os.path.exists(full_filename):
-            LOG.debug(f"Using {full_filename} as prometheus configuration")
+            LOG.debug("Using %s as prometheus configuration", full_filename)
             return open(full_filename, "r")
     return None
 
@@ -66,11 +68,6 @@ def get_prometheus_client():
 
 def get_client(obj):
     return obj.app.client_manager.observabilityclient
-
-
-def list2cols(cols, objs):
-    return cols, [tuple([o[k] for k in cols])
-                  for o in objs]
 
 
 def format_labels(d: dict) -> str:

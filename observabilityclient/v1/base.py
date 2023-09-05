@@ -44,6 +44,7 @@ class ObservabilityBaseCommand(command.Command):
 
 class Manager(object):
     """Base class for the python api."""
+
     DEFAULT_HEADERS = {
         "Accept": "application/json",
     }

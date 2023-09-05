@@ -12,7 +12,7 @@
 #   License for the specific language governing permissions and limitations
 #   under the License.
 
-"""OpenStackClient Plugin interface"""
+"""OpenStackClient Plugin interface."""
 
 from osc_lib import utils
 
@@ -26,7 +26,7 @@ API_VERSIONS = {
 
 
 def make_client(instance):
-    """Returns a client to the ClientManager
+    """Return a client to the ClientManager.
 
     Called to instantiate the requested client version.  instance has
     any available auth info that may be required to prepare the client.
@@ -47,7 +47,7 @@ def make_client(instance):
 
 
 def build_option_parser(parser):
-    """Hook to add global options
+    """Add global options.
 
     Called from openstackclient.shell.OpenStackShell.__init__()
     after the builtin parser has been initialized.  This is

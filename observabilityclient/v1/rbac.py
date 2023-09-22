@@ -23,7 +23,7 @@ class ObservabilityRbacError(Exception):
     pass
 
 
-class Rbac():
+class Rbac(object):
     def __init__(self, client, session, disable_rbac=False):
         self.client = client
         self.session = session

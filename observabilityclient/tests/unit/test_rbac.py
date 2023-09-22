@@ -16,7 +16,6 @@ from unittest import mock
 
 from keystoneauth1.exceptions.auth_plugins import MissingAuthPlugin
 from keystoneauth1 import session
-
 import testtools
 
 from observabilityclient.v1 import rbac
@@ -44,7 +43,7 @@ class RbacTest(testtools.TestCase):
         with mock.patch.object(session.Session, 'get_project_id',
                                side_effect=MissingAuthPlugin()):
             r = rbac.Rbac("client", session.Session(), False)
-            self.assertEqual(r.project_id, None)
+            self.assertIsNone(r.project_id)
 
     def test_enrich_query(self):
         test_cases = [

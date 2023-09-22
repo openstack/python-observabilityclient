@@ -47,14 +47,14 @@ class PrometheusAPIClientError(Exception):
             return f'[{decoded.status}]'
 
 
-class PrometheusMetric:
+class PrometheusMetric(object):
     def __init__(self, input):
         self.timestamp = input['value'][0]
         self.labels = input['metric']
         self.value = input['value'][1]
 
 
-class PrometheusAPIClient:
+class PrometheusAPIClient(object):
     def __init__(self, host):
         self._host = host
         self._session = requests.Session()

@@ -40,7 +40,7 @@ class GetConfigFileTest(testtools.TestCase):
         with mock.patch.object(os.path, 'exists', return_value=False) as m:
             ret = metric_utils.get_config_file()
         m.call_args_list == expected
-        self.assertEqual(ret, None)
+        self.assertIsNone(ret)
 
 
 class GetPrometheusClientTest(testtools.TestCase):

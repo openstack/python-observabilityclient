@@ -35,10 +35,10 @@ class CliTest(testtools.TestCase):
         expected = (['metric_name'], [['name1'], ['name2'], ['name3']])
         cli_list = cli.List(mock.Mock(), mock.Mock())
 
-        with (mock.patch.object(metric_utils, 'get_client',
-                                return_value=self.client),
-              mock.patch.object(self.client.query, 'list',
-                                return_value=metric_names) as m):
+        with mock.patch.object(metric_utils, 'get_client',
+                               return_value=self.client), \
+                mock.patch.object(self.client.query, 'list',
+                                  return_value=metric_names) as m:
             ret1 = cli_list.take_action(args_enabled)
             m.assert_called_with(disable_rbac=False)
 
@@ -61,10 +61,10 @@ class CliTest(testtools.TestCase):
 
         cli_show = cli.Show(mock.Mock(), mock.Mock())
 
-        with (mock.patch.object(metric_utils, 'get_client',
-                                return_value=self.client),
-              mock.patch.object(self.client.query, 'show',
-                                return_value=prom_metric) as m):
+        with mock.patch.object(metric_utils, 'get_client',
+                               return_value=self.client), \
+                mock.patch.object(self.client.query, 'show',
+                                  return_value=prom_metric) as m:
 
             ret1 = cli_show.take_action(args_enabled)
             m.assert_called_with('metric_name', disable_rbac=False)
@@ -91,10 +91,10 @@ class CliTest(testtools.TestCase):
 
         cli_query = cli.Query(mock.Mock(), mock.Mock())
 
-        with (mock.patch.object(metric_utils, 'get_client',
-                                return_value=self.client),
-              mock.patch.object(self.client.query, 'query',
-                                return_value=prom_metric) as m):
+        with mock.patch.object(metric_utils, 'get_client',
+                               return_value=self.client), \
+                mock.patch.object(self.client.query, 'query',
+                                  return_value=prom_metric) as m:
 
             ret1 = cli_query.take_action(args_enabled)
             m.assert_called_with(query, disable_rbac=False)
@@ -111,9 +111,9 @@ class CliTest(testtools.TestCase):
 
         cli_delete = cli.Delete(mock.Mock(), mock.Mock())
 
-        with (mock.patch.object(metric_utils, 'get_client',
-                                return_value=self.client),
-              mock.patch.object(self.client.query, 'delete') as m):
+        with mock.patch.object(metric_utils, 'get_client',
+                               return_value=self.client), \
+                mock.patch.object(self.client.query, 'delete') as m:
 
             cli_delete.take_action(args)
             m.assert_called_with(matches, 0, 10)
@@ -121,9 +121,9 @@ class CliTest(testtools.TestCase):
     def test_clean_combstones(self):
         cli_clean_tombstones = cli.CleanTombstones(mock.Mock(), mock.Mock())
 
-        with (mock.patch.object(metric_utils, 'get_client',
-                                return_value=self.client),
-              mock.patch.object(self.client.query, 'clean_tombstones') as m):
+        with mock.patch.object(metric_utils, 'get_client',
+                               return_value=self.client), \
+                mock.patch.object(self.client.query, 'clean_tombstones') as m:
 
             cli_clean_tombstones.take_action({})
             m.assert_called_once()
@@ -132,10 +132,10 @@ class CliTest(testtools.TestCase):
         cli_snapshot = cli.Snapshot(mock.Mock(), mock.Mock())
         file_name = 'some_file_name'
 
-        with (mock.patch.object(metric_utils, 'get_client',
-                                return_value=self.client),
-              mock.patch.object(self.client.query, 'snapshot',
-                                return_value=file_name) as m):
+        with mock.patch.object(metric_utils, 'get_client',
+                               return_value=self.client), \
+                mock.patch.object(self.client.query, 'snapshot',
+                                  return_value=file_name) as m:
 
             ret = cli_snapshot.take_action({})
             m.assert_called_once()

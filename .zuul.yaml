@@ -1,0 +1,41 @@
+- project:
+    queue: telemetry
+    templates:
+      - openstack-python3-jobs
+      - check-requirements
+      #- release-notes-jobs-python3
+    check:
+      jobs:
+        - telemetry-dsvm-integration:
+            irrelevant-files: &pobsc-irrelevant-files
+              - ^(test-|)requirements.txt$
+              - ^setup.cfg$
+              - ^.*\.rst$
+              - ^releasenotes/.*$
+              - ^observabilityclient/tests/.*$
+              - ^tools/.*$
+              - ^tox.ini$
+            voting: false
+        - telemetry-dsvm-integration-ipv6-only:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false
+        - telemetry-dsvm-integration-centos-9s:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false
+        - telemetry-dsvm-integration-centos-9s-fips:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false
+    gate:
+      jobs:
+        - telemetry-dsvm-integration:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false
+        - telemetry-dsvm-integration-ipv6-only:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false
+        - telemetry-dsvm-integration-centos-9s:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false
+        - telemetry-dsvm-integration-centos-9s-fips:
+            irrelevant-files: *pobsc-irrelevant-files
+            voting: false

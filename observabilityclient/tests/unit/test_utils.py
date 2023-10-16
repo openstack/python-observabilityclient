@@ -26,8 +26,8 @@ class GetConfigFileTest(testtools.TestCase):
         super(GetConfigFileTest, self).setUp()
 
     def test_current_dir(self):
-        with (mock.patch.object(os.path, 'exists', return_value=True),
-              mock.patch.object(metric_utils, 'open') as m):
+        with mock.patch.object(os.path, 'exists', return_value=True), \
+                mock.patch.object(metric_utils, 'open') as m:
             metric_utils.get_config_file()
         m.assert_called_with(metric_utils.CONFIG_FILE_NAME, 'r')
 
@@ -50,35 +50,35 @@ class GetPrometheusClientTest(testtools.TestCase):
         self.config_file = mock.mock_open(read_data=config_data)("name", 'r')
 
     def test_get_prometheus_client_from_file(self):
-        with (mock.patch.object(metric_utils, 'get_config_file',
-                                return_value=self.config_file),
-              mock.patch.object(prometheus_client.PrometheusAPIClient,
-                                "__init__", return_value=None) as m):
+        with mock.patch.object(metric_utils, 'get_config_file',
+                               return_value=self.config_file), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
         m.assert_called_with("somehost:1234")
 
     def test_get_prometheus_client_env_overide(self):
-        with (mock.patch.dict(os.environ, {'PROMETHEUS_HOST': 'env_overide'}),
-              mock.patch.object(metric_utils, 'get_config_file',
-                                return_value=self.config_file),
-              mock.patch.object(prometheus_client.PrometheusAPIClient,
-                                "__init__", return_value=None) as m):
+        with mock.patch.dict(os.environ, {'PROMETHEUS_HOST': 'env_overide'}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=self.config_file), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
         m.assert_called_with("env_overide:1234")
 
     def test_get_prometheus_client_no_config_file(self):
         patched_env = {'PROMETHEUS_HOST': 'env_overide',
                        'PROMETHEUS_PORT': 'env_port'}
-        with (mock.patch.dict(os.environ, patched_env),
-              mock.patch.object(prometheus_client.PrometheusAPIClient,
-                                "__init__", return_value=None) as m):
+        with mock.patch.dict(os.environ, patched_env), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
         m.assert_called_with("env_overide:env_port")
 
     def test_get_prometheus_client_missing_configuration(self):
-        with (mock.patch.dict(os.environ, {}),
-              mock.patch.object(prometheus_client.PrometheusAPIClient,
-                                "__init__", return_value=None)):
+        with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None):
             self.assertRaises(metric_utils.ConfigurationError,
                               metric_utils.get_prometheus_client)
 

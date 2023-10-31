@@ -24,7 +24,7 @@ class List(base.ObservabilityBaseCommand, lister.Lister):
 
     def take_action(self, parsed_args):
         client = metric_utils.get_client(self)
-        metrics = client.query.list(disable_rbac=parsed_args['disable_rbac'])
+        metrics = client.query.list(disable_rbac=parsed_args.disable_rbac)
         return ["metric_name"], [[m] for m in metrics]
 
 
@@ -40,8 +40,8 @@ class Show(base.ObservabilityBaseCommand, lister.Lister):
 
     def take_action(self, parsed_args):
         client = metric_utils.get_client(self)
-        metric = client.query.show(parsed_args['name'],
-                                   disable_rbac=parsed_args['disable_rbac'])
+        metric = client.query.show(parsed_args.name,
+                                   disable_rbac=parsed_args.disable_rbac)
         ret = metric_utils.metrics2cols(metric)
         return ret
 
@@ -58,8 +58,8 @@ class Query(base.ObservabilityBaseCommand, lister.Lister):
 
     def take_action(self, parsed_args):
         client = metric_utils.get_client(self)
-        metric = client.query.query(parsed_args['query'],
-                                    disable_rbac=parsed_args['disable_rbac'])
+        metric = client.query.query(parsed_args.query,
+                                    disable_rbac=parsed_args.disable_rbac)
         ret = metric_utils.metrics2cols(metric)
         return ret
 
@@ -88,9 +88,9 @@ class Delete(base.ObservabilityBaseCommand):
 
     def take_action(self, parsed_args):
         client = metric_utils.get_client(self)
-        return client.query.delete(parsed_args['matches'],
-                                   parsed_args['start'],
-                                   parsed_args['end'])
+        return client.query.delete(parsed_args.matches,
+                                   parsed_args.start,
+                                   parsed_args.end)
 
 
 class CleanTombstones(base.ObservabilityBaseCommand):

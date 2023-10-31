@@ -28,30 +28,31 @@ class CliTest(testtools.TestCase):
         self.client.query = mock.Mock()
 
     def test_list(self):
-        args_enabled = {'disable_rbac': False}
-        args_disabled = {'disable_rbac': True}
-
         metric_names = ['name1', 'name2', 'name3']
         expected = (['metric_name'], [['name1'], ['name2'], ['name3']])
         cli_list = cli.List(mock.Mock(), mock.Mock())
+
+        parser = cli_list.get_parser("metric list")
+        test_parsed_args_enabled = parser.parse_args([
+        ])
+        test_parsed_args_disabled = parser.parse_args([
+            "--disable-rbac"
+        ])
 
         with mock.patch.object(metric_utils, 'get_client',
                                return_value=self.client), \
                 mock.patch.object(self.client.query, 'list',
                                   return_value=metric_names) as m:
-            ret1 = cli_list.take_action(args_enabled)
+            ret1 = cli_list.take_action(test_parsed_args_enabled)
             m.assert_called_with(disable_rbac=False)
 
-            ret2 = cli_list.take_action(args_disabled)
+            ret2 = cli_list.take_action(test_parsed_args_disabled)
             m.assert_called_with(disable_rbac=True)
 
         self.assertEqual(ret1, expected)
         self.assertEqual(ret2, expected)
 
     def test_show(self):
-        args_enabled = {'name': 'metric_name', 'disable_rbac': False}
-        args_disabled = {'name': 'metric_name', 'disable_rbac': True}
-
         metric = {
             'value': [123456, 12],
             'metric': {'label1': 'value1'}
@@ -61,15 +62,24 @@ class CliTest(testtools.TestCase):
 
         cli_show = cli.Show(mock.Mock(), mock.Mock())
 
+        parser = cli_show.get_parser("metric show")
+        test_parsed_args_enabled = parser.parse_args([
+            "metric_name"
+        ])
+        test_parsed_args_disabled = parser.parse_args([
+            "metric_name",
+            "--disable-rbac"
+        ])
+
         with mock.patch.object(metric_utils, 'get_client',
                                return_value=self.client), \
                 mock.patch.object(self.client.query, 'show',
                                   return_value=prom_metric) as m:
 
-            ret1 = cli_show.take_action(args_enabled)
+            ret1 = cli_show.take_action(test_parsed_args_enabled)
             m.assert_called_with('metric_name', disable_rbac=False)
 
-            ret2 = cli_show.take_action(args_disabled)
+            ret2 = cli_show.take_action(test_parsed_args_disabled)
             m.assert_called_with('metric_name', disable_rbac=True)
 
         self.assertEqual(ret1, expected)
@@ -78,8 +88,6 @@ class CliTest(testtools.TestCase):
     def test_query(self):
         query = ("some_query{label!~'not_this_value'} - "
                  "sum(second_metric{label='this'})")
-        args_enabled = {'query': query, 'disable_rbac': False}
-        args_disabled = {'query': query, 'disable_rbac': True}
 
         metric = {
             'value': [123456, 12],
@@ -91,32 +99,48 @@ class CliTest(testtools.TestCase):
 
         cli_query = cli.Query(mock.Mock(), mock.Mock())
 
+        parser = cli_query.get_parser("metric query")
+        test_parsed_args_enabled = parser.parse_args([
+            query
+        ])
+        test_parsed_args_disabled = parser.parse_args([
+            query,
+            "--disable-rbac"
+        ])
+
         with mock.patch.object(metric_utils, 'get_client',
                                return_value=self.client), \
                 mock.patch.object(self.client.query, 'query',
                                   return_value=prom_metric) as m:
 
-            ret1 = cli_query.take_action(args_enabled)
+            ret1 = cli_query.take_action(test_parsed_args_enabled)
             m.assert_called_with(query, disable_rbac=False)
 
-            ret2 = cli_query.take_action(args_disabled)
+            ret2 = cli_query.take_action(test_parsed_args_disabled)
             m.assert_called_with(query, disable_rbac=True)
 
         self.assertEqual(ret1, expected)
         self.assertEqual(ret2, expected)
 
     def test_delete(self):
-        matches = "some_label_name"
-        args = {'matches': matches, 'start': 0, 'end': 10}
+        match1 = "some_label_name"
+        match2 = "some_label_name2"
 
         cli_delete = cli.Delete(mock.Mock(), mock.Mock())
+
+        parser = cli_delete.get_parser("metric delete")
+        test_parsed_args = parser.parse_args([
+            match1, match2,
+            "--start", "0",
+            "--end", "10"
+        ])
 
         with mock.patch.object(metric_utils, 'get_client',
                                return_value=self.client), \
                 mock.patch.object(self.client.query, 'delete') as m:
 
-            cli_delete.take_action(args)
-            m.assert_called_with(matches, 0, 10)
+            cli_delete.take_action(test_parsed_args)
+            m.assert_called_with([[match1, match2]], "0", "10")
 
     def test_clean_combstones(self):
         cli_clean_tombstones = cli.CleanTombstones(mock.Mock(), mock.Mock())

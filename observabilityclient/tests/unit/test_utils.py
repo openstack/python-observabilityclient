@@ -70,6 +70,8 @@ class GetPrometheusClientTest(testtools.TestCase):
         patched_env = {'PROMETHEUS_HOST': 'env_overide',
                        'PROMETHEUS_PORT': 'env_port'}
         with mock.patch.dict(os.environ, patched_env), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
@@ -77,6 +79,8 @@ class GetPrometheusClientTest(testtools.TestCase):
 
     def test_get_prometheus_client_missing_configuration(self):
         with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None):
             self.assertRaises(metric_utils.ConfigurationError,

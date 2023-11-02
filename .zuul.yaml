@@ -1,3 +1,24 @@
+- job:
+    # TODO(jwysogla): Include these tests in the
+    # telemetry-dsvm-integration jobs
+    name: observabilityclient-dsvm-functional
+    parent: devstack-tox-functional
+    description: |
+      Devstack-based functional tests for observabilityclient.
+    required-projects:
+      - openstack/python-observabilityclient
+      - openstack/ceilometer
+      - infrawatch/sg-core
+    timeout: 4200
+    vars:
+      devstack_localrc:
+        USE_PYTHON3: True
+        PROMETHEUS_SERVICE_SCRAPE_TARGETS: prometheus,sg-core
+        CEILOMETER_BACKEND: sg-core
+      devstack_plugins:
+        sg-core: https://github.com/infrawatch/sg-core
+        ceilometer: https://opendev.org/openstack/ceilometer
+
 - project:
     queue: telemetry
     templates:
@@ -25,6 +46,8 @@
         - telemetry-dsvm-integration-centos-9s-fips:
             irrelevant-files: *pobsc-irrelevant-files
             voting: false
+        - observabilityclient-dsvm-functional:
+            irrelevant-files: *pobsc-irrelevant-files
     gate:
       jobs:
         - telemetry-dsvm-integration:
@@ -39,3 +62,5 @@
         - telemetry-dsvm-integration-centos-9s-fips:
             irrelevant-files: *pobsc-irrelevant-files
             voting: false
+        - observabilityclient-dsvm-functional:
+            irrelevant-files: *pobsc-irrelevant-files

@@ -14,7 +14,8 @@
 #
 
 from osc_lib.command import command
-from osc_lib.i18n import _
+
+from observabilityclient.i18n import _
 
 
 class ObservabilityBaseCommand(command.Command):

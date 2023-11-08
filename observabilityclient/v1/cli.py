@@ -14,8 +14,7 @@
 
 from cliff import lister
 
-from osc_lib.i18n import _
-
+from observabilityclient.i18n import _
 from observabilityclient.utils import metric_utils
 from observabilityclient.v1 import base
 

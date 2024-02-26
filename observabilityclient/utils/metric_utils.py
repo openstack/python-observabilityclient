@@ -45,6 +45,7 @@ def get_config_file():
 def get_prometheus_client():
     host = None
     port = None
+    ca_cert = None
     conf_file = get_config_file()
     if conf_file is not None:
         conf = yaml.safe_load(conf_file)
@@ -52,6 +53,8 @@ def get_prometheus_client():
             host = conf['host']
         if 'port' in conf:
             port = conf['port']
+        if 'ca_cert' in conf:
+            ca_cert = conf['ca_cert']
         conf_file.close()
 
     # NOTE(jwysogla): We allow to overide the prometheus.yaml by
@@ -60,10 +63,15 @@ def get_prometheus_client():
         host = os.environ['PROMETHEUS_HOST']
     if 'PROMETHEUS_PORT' in os.environ:
         port = os.environ['PROMETHEUS_PORT']
+    if 'PROMETHEUS_CA_CERT' in os.environ:
+        ca_cert = os.environ['PROMETHEUS_CA_CERT']
     if host is None or port is None:
         raise ConfigurationError("Can't find prometheus host and "
                                  "port configuration.")
-    return PrometheusAPIClient(f"{host}:{port}")
+    client = PrometheusAPIClient(f"{host}:{port}")
+    if ca_cert is not None:
+        client.set_ca_cert(ca_cert)
+    return client
 
 
 def get_client(obj):

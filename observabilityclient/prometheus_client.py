@@ -15,6 +15,7 @@
 import logging
 
 import requests
+import simplejson
 
 
 LOG = logging.getLogger(__name__)
@@ -27,9 +28,15 @@ class PrometheusAPIClientError(Exception):
     def __str__(self) -> str:
         if self.resp.status_code != requests.codes.ok:
             if self.resp.status_code != 204:
-                decoded = self.resp.json()
-                if 'error' in decoded:
-                    return f'[{self.resp.status_code}] {decoded["error"]}'
+                try:
+                    decoded = self.resp.json()
+                    if 'error' in decoded:
+                        return f'[{self.resp.status_code}] {decoded["error"]}'
+                except simplejson.errors.JSONDecodeError:
+                    # If an https endpoint is accessed as http,
+                    # we get 400 status with plain text instead of
+                    # json and decoding it raises exception.
+                    return f'[{self.resp.status_code}] {self.resp.text}'
             return f'[{self.resp.status_code}] {self.resp.reason}'
         else:
             decoded = self.resp.json()

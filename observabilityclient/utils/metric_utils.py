@@ -98,18 +98,14 @@ def format_labels(d: dict) -> str:
 
 
 def metrics2cols(m):
-    cols = []
+    # get all label keys
+    cols = list(set().union(*(d.labels.keys() for d in m)))
+    cols.append("value")
     fields = []
-    first = True
     for metric in m:
-        row = []
+        row = [""] * len(cols)
         for key, value in metric.labels.items():
-            if first:
-                cols.append(key)
-            row.append(value)
-        if first:
-            cols.append("value")
-        row.append(metric.value)
+            row[cols.index(key)] = value
+        row[cols.index("value")] = metric.value
         fields.append(row)
-        first = False
     return cols, fields

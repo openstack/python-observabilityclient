@@ -100,6 +100,7 @@ def format_labels(d: dict) -> str:
 def metrics2cols(m):
     # get all label keys
     cols = list(set().union(*(d.labels.keys() for d in m)))
+    cols.sort()
     cols.append("value")
     fields = []
     for metric in m:

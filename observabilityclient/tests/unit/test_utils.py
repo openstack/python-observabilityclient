@@ -128,3 +128,70 @@ class Metrics2ColsTest(testtools.TestCase):
 
         ret = metric_utils.metrics2cols(input_metrics)
         self.assertEqual(expected, ret)
+
+    def test_metrics2cols_column_ordering(self):
+        metric = {
+            'value': [
+                1234567,
+                5
+            ],
+            'metric': {
+                'a_label1': 'value1',
+                'b_label2': 'value2',
+            }
+        }
+        input_metrics = [prometheus_client.PrometheusMetric(metric)]
+        expected = (['a_label1', 'b_label2', 'value'],
+                    [['value1', 'value2', 5]])
+
+        ret = metric_utils.metrics2cols(input_metrics)
+        self.assertEqual(expected, ret)
+
+        metric = {
+            'value': [
+                1234567,
+                5
+            ],
+            'metric': {
+                'b_label1': 'value1',
+                'a_label2': 'value2',
+            }
+        }
+        input_metrics = [prometheus_client.PrometheusMetric(metric)]
+        expected = (['a_label2', 'b_label1', 'value'],
+                    [['value2', 'value1', 5]])
+
+        ret = metric_utils.metrics2cols(input_metrics)
+        self.assertEqual(expected, ret)
+
+        metric1 = {
+            'value': [
+                1234567,
+                5
+            ],
+            'metric': {
+                'b_label1': 'value1',
+                'a_label2': 'value2',
+            }
+        }
+        metric2 = {
+            'value': [
+                1234567,
+                5
+            ],
+            'metric': {
+                'b_label1': 'value1',
+                'a_label2': 'value2',
+                'd_label3': 'value3',
+                'c_label4': 'value4',
+            }
+        }
+        input_metrics = [prometheus_client.PrometheusMetric(metric1),
+                         prometheus_client.PrometheusMetric(metric2)]
+        expected = (['a_label2', 'b_label1', 'c_label4', 'd_label3', 'value'],
+                    [['value2', 'value1', '', '', 5],
+                     ['value2', 'value1', 'value4', 'value3', 5]]
+                    )
+
+        ret = metric_utils.metrics2cols(input_metrics)
+        self.assertEqual(expected, ret)

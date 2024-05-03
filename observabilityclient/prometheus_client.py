@@ -15,7 +15,6 @@
 import logging
 
 import requests
-import simplejson
 
 
 LOG = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ class PrometheusAPIClientError(Exception):
                     decoded = self.resp.json()
                     if 'error' in decoded:
                         return f'[{self.resp.status_code}] {decoded["error"]}'
-                except simplejson.errors.JSONDecodeError:
+                except requests.JSONDecodeError:
                     # If an https endpoint is accessed as http,
                     # we get 400 status with plain text instead of
                     # json and decoding it raises exception.
@@ -43,15 +42,7 @@ class PrometheusAPIClientError(Exception):
             return f'[{decoded.status}]'
 
     def __repr__(self) -> str:
-        if self.resp.status_code != requests.codes.ok:
-            if self.resp.status_code != 204:
-                decoded = self.resp.json()
-                if 'error' in decoded:
-                    return f'[{self.resp.status_code}] {decoded["error"]}'
-            return f'[{self.resp.status_code}] {self.resp.reason}'
-        else:
-            decoded = self.resp.json()
-            return f'[{decoded.status}]'
+        return self.__str__()
 
 
 class PrometheusMetric(object):

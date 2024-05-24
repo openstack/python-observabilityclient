@@ -23,17 +23,6 @@ class ObservabilityBaseCommand(command.Command):
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
-        parser.add_argument(
-            '--dev',
-            action='store_true',
-            help=_("Enable development output.")
-        )
-        parser.add_argument(
-            '--messy',
-            action='store_true',
-            help=_("Disable cleanup of temporary files.")
-        )
-
         # TODO(jwysogla): Should this be restricted somehow?
         parser.add_argument(
             '--disable-rbac',

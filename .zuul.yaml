@@ -24,7 +24,7 @@
     templates:
       - openstack-python3-jobs
       - check-requirements
-      #- release-notes-jobs-python3
+      - release-notes-jobs-python3
     check:
       jobs:
         - telemetry-dsvm-integration:

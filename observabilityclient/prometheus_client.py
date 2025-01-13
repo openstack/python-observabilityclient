@@ -68,9 +68,12 @@ class PrometheusAPIClient(object):
     def set_basic_auth(self, auth_user, auth_password):
         self._session.auth = (auth_user, auth_password)
 
+    def _get_url(self, endpoint):
+        scheme = 'https' if self._session.verify else 'http'
+        return f"{scheme}://{self._host}/api/v1/{endpoint}"  # noqa: E231
+
     def _get(self, endpoint, params=None):
-        url = (f"{'https' if self._session.verify else 'http'}://"
-               f"{self._host}/api/v1/{endpoint}")
+        url = self._get_url(endpoint)
         resp = self._session.get(url, params=params,
                                  headers={'Accept': 'application/json'})
         if resp.status_code != requests.codes.ok:
@@ -82,8 +85,7 @@ class PrometheusAPIClient(object):
         return decoded
 
     def _post(self, endpoint, params=None):
-        url = (f"{'https' if self._session.verify else 'http'}://"
-               f"{self._host}/api/v1/{endpoint}")
+        url = self._get_url(endpoint)
         resp = self._session.post(url, params=params,
                                   headers={'Accept': 'application/json'})
         if resp.status_code != requests.codes.ok:

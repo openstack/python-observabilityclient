@@ -71,6 +71,10 @@ class Rbac(object):
         return end
 
     def _find_label_section_end(self, query, start):
+        if query[start:].startswith('{}'):
+            # We have an empty label section, without any
+            # label pair
+            return start + 1
         nearest_curly_brace_pos = None
         while nearest_curly_brace_pos != -1:
             pair_end = self._find_label_pair_end(query, start)
@@ -84,7 +88,18 @@ class Rbac(object):
                 # and the "=" or "~" is a part of the next section.
                 return nearest_curly_brace_pos
             start = pair_end
+        # TODO(tkajinam): We should probably raise an exception here because
+        # this indicates illegal format without closing } .
         return -1
+
+    def _insert_labels(
+        self, query, location, labels, comma=False, braces=False
+    ):
+        comma_str = ", " if comma else ""
+        labels_str = f"{{{labels}}}" if braces else labels
+        return (f"{query[:location]}{comma_str}"
+                f"{labels_str}"
+                f"{query[location:]}")
 
     def enrich_query(self, query, disable_rbac=False):
         """Add rbac labels to queries.
@@ -94,7 +109,6 @@ class Rbac(object):
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
         """
-        # TODO(jwysogla): This should be properly tested
         if disable_rbac:
             return query
         labels = self.default_labels
@@ -117,19 +131,40 @@ class Rbac(object):
                     name_end_locations.append(potential_name.end())
 
         name_end_locations = sorted(name_end_locations, reverse=True)
+        if len(name_end_locations) == 0:
+            name_end_locations = [0]
         for name_end_location in name_end_locations:
             if (name_end_location < len(query) and
                query[name_end_location] == "{"):
-                # There already are some labels
-                labels_end = self._find_label_section_end(query,
-                                                          name_end_location)
-                query = (f"{query[:labels_end]}, "
-                         f"{format_labels(labels)}"
-                         f"{query[labels_end:]}")
+                # There is already a label section
+                labels_end = self._find_label_section_end(
+                    query,
+                    name_end_location
+                )
+                if labels_end == name_end_location + 1:
+                    query = self._insert_labels(
+                        query,
+                        labels_end,
+                        format_labels(labels),
+                        comma=False,
+                        braces=False
+                    )
+                else:
+                    query = self._insert_labels(
+                        query,
+                        labels_end,
+                        format_labels(labels),
+                        comma=True,
+                        braces=False
+                    )
             else:
-                query = (f"{query[:name_end_location]}"
-                         f"{{{format_labels(labels)}}}"
-                         f"{query[name_end_location:]}")
+                query = self._insert_labels(
+                    query,
+                    name_end_location,
+                    format_labels(labels),
+                    comma=False,
+                    braces=True
+                )
         return query
 
     def append_rbac(self, query, disable_rbac=False):

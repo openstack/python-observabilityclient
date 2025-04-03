@@ -20,8 +20,11 @@ import yaml
 from observabilityclient.prometheus_client import PrometheusAPIClient
 
 
-DEFAULT_CONFIG_LOCATIONS = [os.environ["HOME"] + "/.config/openstack/",
-                            "/etc/openstack/"]
+DEFAULT_CONFIG_LOCATIONS = (
+    [os.path.join(os.environ["HOME"], ".config/openstack/"), "/etc/openstack/"]
+    if "HOME" in os.environ
+    else ["/etc/openstack/"]
+)
 CONFIG_FILE_NAME = "prometheus.yaml"
 LOG = logging.getLogger(__name__)
 

@@ -23,11 +23,11 @@ class QueryManager(base.Manager):
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
         """
-        if disable_rbac or self.client.rbac.disable_rbac:
+        if disable_rbac:
             metric_names = self.prom.label_values("__name__")
             return sorted(metric_names)
         else:
-            match = f"{{{format_labels(self.client.rbac.default_labels)}}}"
+            match = f"{{{format_labels(self.client.rbac.labels)}}}"
             metrics = self.prom.series(match)
             if metrics == []:
                 return []
@@ -40,9 +40,12 @@ class QueryManager(base.Manager):
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
         """
-        enriched = self.client.rbac.append_rbac(name,
-                                                disable_rbac=disable_rbac)
-        last_metric_query = f"last_over_time({enriched}[5m])"
+        query = ""
+        if disable_rbac:
+            query = name
+        else:
+            query = self.client.rbac.append_rbac_labels(name)
+        last_metric_query = f"last_over_time({query}[5m])"
         return self.prom.query(last_metric_query)
 
     def query(self, query, disable_rbac=False):
@@ -63,7 +66,8 @@ class QueryManager(base.Manager):
         :param disable_rbac: Disables rbac injection if set to True
         :type disable_rbac: boolean
         """
-        query = self.client.rbac.enrich_query(query, disable_rbac=disable_rbac)
+        if not disable_rbac:
+            query = self.client.rbac.modify_query(query)
         return self.prom.query(query)
 
     def delete(self, matches, start=None, end=None):

@@ -14,32 +14,15 @@
 
 import re
 
-from keystoneauth1.exceptions.auth_plugins import MissingAuthPlugin
-
 from observabilityclient.utils.metric_utils import format_labels
 
 
-class ObservabilityRbacError(Exception):
-    pass
-
-
-class Rbac(object):
-    def __init__(self, client, session, disable_rbac=False):
-        self.client = client
-        self.session = session
-        self.disable_rbac = disable_rbac
-        try:
-            self.project_id = self.session.get_project_id()
-            self.default_labels = {
-                "project": self.project_id
-            }
-            self.rbac_init_successful = True
-        except MissingAuthPlugin:
-            self.project_id = None
-            self.default_labels = {
-                "project": "no-project"
-            }
-            self.rbac_init_successful = False
+class PromQLRbac(object):
+    def __init__(self, prom_api_client, project_id):
+        self.client = prom_api_client
+        self.labels = {
+            "project": project_id
+        }
 
     def _find_label_value_end(self, query, start, quote_char):
         end = start
@@ -92,29 +75,22 @@ class Rbac(object):
         # this indicates illegal format without closing } .
         return -1
 
-    def _insert_labels(
-        self, query, location, labels, comma=False, braces=False
-    ):
+    def _insert_labels(self, query, location, comma=False, braces=False):
         comma_str = ", " if comma else ""
-        labels_str = f"{{{labels}}}" if braces else labels
+        formatted_labels = format_labels(self.labels)
+        labels_str = f"{{{formatted_labels}}}" if braces else formatted_labels
         return (f"{query[:location]}{comma_str}"
                 f"{labels_str}"
                 f"{query[location:]}")
 
-    def enrich_query(self, query, disable_rbac=False):
-        """Add rbac labels to queries.
+    def modify_query(self, query):
+        """Add rbac labels to a query.
 
-        :param query: The query to enrich
+        :param query: The query to modify
         :type query: str
-        :param disable_rbac: Disables rbac injection if set to True
-        :type disable_rbac: boolean
         """
-        if disable_rbac:
-            return query
-        labels = self.default_labels
-
         # We need to get all metric names, no matter the rbac
-        metric_names = self.client.query.list(disable_rbac=False)
+        metric_names = self.client.label_values("__name__")
 
         # We need to detect the locations of metric names
         # inside the query
@@ -145,7 +121,6 @@ class Rbac(object):
                     query = self._insert_labels(
                         query,
                         labels_end,
-                        format_labels(labels),
                         comma=False,
                         braces=False
                     )
@@ -153,7 +128,6 @@ class Rbac(object):
                     query = self._insert_labels(
                         query,
                         labels_end,
-                        format_labels(labels),
                         comma=True,
                         braces=False
                     )
@@ -161,26 +135,23 @@ class Rbac(object):
                 query = self._insert_labels(
                     query,
                     name_end_location,
-                    format_labels(labels),
                     comma=False,
                     braces=True
                 )
         return query
 
-    def append_rbac(self, query, disable_rbac=False):
+    def append_rbac_labels(self, query):
         """Append rbac labels to queries.
 
-        It's a simplified and faster version of enrich_query(). This just
+        It's a simplified and faster version of modify_query(). This just
         appends the labels at the end of the query string. For proper handling
         of complex queries, where metric names might occure elsewhere than
-        just at the end, please use the enrich_query() function.
+        just at the end, please use the modify_query() function.
 
         :param query: The query to append to
         :type query: str
-        :param disable_rbac: Disables rbac injection if set to True
-        :type disable_rbac: boolean
         """
-        labels = self.default_labels
-        if disable_rbac:
-            return query
-        return f"{query}{{{format_labels(labels)}}}"
+        if any(c in query for c in "{}"):
+            return self.modify_query(query)
+        else:
+            return f"{query}{{{format_labels(self.labels)}}}"

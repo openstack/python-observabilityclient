@@ -14,9 +14,9 @@
 
 import keystoneauth1.session
 
+from observabilityclient import rbac
 from observabilityclient.utils.metric_utils import get_prometheus_client
 from observabilityclient.v1 import python_api
-from observabilityclient.v1 import rbac
 
 
 class Client(object):
@@ -40,4 +40,7 @@ class Client(object):
 
         self.prometheus_client = get_prometheus_client()
         self.query = python_api.QueryManager(self)
-        self.rbac = rbac.Rbac(self, self.session, disable_rbac)
+        self.rbac = rbac.PromQLRbac(
+            self.prometheus_client,
+            self.session.get_project_id()
+        )

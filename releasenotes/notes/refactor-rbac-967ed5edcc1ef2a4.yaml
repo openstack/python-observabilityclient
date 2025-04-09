@@ -1,0 +1,13 @@
+---
+upgrade:
+  - |
+    The rbac module was refactored. The `Rbac` class was renamed to
+    `PromQLRbac` and it was moved from `observabilityclient.v1.rbac` to
+    `observabilityclient.rbac`. The `enrich_query` function was renamed to
+    `modify_query` and the `append_rbac` function was renamed to
+    `append_rbac_labels`. All "disable_rbac" logic was removed from the
+    PromQLRbac. This functionality should be handled externaly from the class
+    if needed. The PromQLRbac constructor now requires an instance of the
+    PrometheusAPIClient instead of an instance of observabilityclient. It
+    also requires an explicitly specified project id instead of trying to
+    figure it out from a provided session object.

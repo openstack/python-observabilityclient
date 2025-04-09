@@ -17,11 +17,11 @@ from unittest import mock
 import testtools
 
 from observabilityclient import prometheus_client
+from observabilityclient import rbac
 from observabilityclient.tests.unit.test_prometheus_client import (
     MetricListMatcher
 )
 from observabilityclient.v1 import python_api
-from observabilityclient.v1 import rbac
 
 
 class QueryManagerTest(testtools.TestCase):
@@ -31,10 +31,8 @@ class QueryManagerTest(testtools.TestCase):
         prom_client = prometheus_client.PrometheusAPIClient("somehost")
         self.client.prometheus_client = prom_client
 
-        self.rbac = mock.Mock(wraps=rbac.Rbac(self.client, mock.Mock()))
-        self.rbac.default_labels = {'project': 'project_id'}
-        self.rbac.rbac_init_succesful = True
-        self.rbac.disable_rbac = False
+        self.rbac = mock.Mock(wraps=rbac.PromQLRbac(prom_client, mock.Mock()))
+        self.rbac.labels = {'project': 'project_id'}
 
         self.manager = python_api.QueryManager(self.client)
 
@@ -83,15 +81,16 @@ class QueryManagerTest(testtools.TestCase):
         }
         expected = [prometheus_client.PrometheusMetric(returned_by_prom)]
         expected_matcher = MetricListMatcher(expected)
+
+        with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                               return_value=returned_by_prom):
+            ret2 = self.manager.show(query, disable_rbac=True)
+            self.rbac.append_rbac_labels.assert_not_called()
+
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                                return_value=returned_by_prom):
             ret1 = self.manager.show(query)
-            self.rbac.append_rbac.assert_called_with(query,
-                                                     disable_rbac=False)
-
-            ret2 = self.manager.show(query, disable_rbac=True)
-            self.rbac.append_rbac.assert_called_with(query,
-                                                     disable_rbac=True)
+            self.rbac.append_rbac_labels.assert_called_with(query)
 
         self.assertThat(ret1, expected_matcher)
         self.assertThat(ret2, expected_matcher)
@@ -114,13 +113,12 @@ class QueryManagerTest(testtools.TestCase):
                                return_value=returned_by_prom), \
                 mock.patch.object(python_api.QueryManager, 'list',
                                   return_value=queried_metric_name):
-            ret1 = self.manager.query(query)
-            self.rbac.enrich_query.assert_called_with(query,
-                                                      disable_rbac=False)
 
-            ret2 = self.manager.query(query, disable_rbac=True)
-            self.rbac.enrich_query.assert_called_with(query,
-                                                      disable_rbac=True)
+            ret1 = self.manager.query(query, disable_rbac=True)
+            self.rbac.modify_query.assert_not_called()
+
+            ret2 = self.manager.query(query)
+            self.rbac.modify_query.assert_called_with(query)
 
         self.assertThat(ret1, expected_matcher)
         self.assertThat(ret2, expected_matcher)

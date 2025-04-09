@@ -52,7 +52,7 @@ class PythonAPITestFunctionalRBACEnabled(base.PythonAPITestCase):
         for metric in ret:
             self.assertEqual("ceilometer_image_size",
                              metric.labels["__name__"])
-            self.assertEqual("sg-core",
+            self.assertEqual("custom",
                              metric.labels["job"])
 
     def test_query(self):
@@ -62,7 +62,7 @@ class PythonAPITestFunctionalRBACEnabled(base.PythonAPITestCase):
         for metric in ret:
             self.assertEqual("ceilometer_image_size",
                              metric.labels["__name__"])
-            self.assertEqual("sg-core", metric.labels["job"])
+            self.assertEqual("custom", metric.labels["job"])
 
 
 class PythonAPITestFunctionalAdminCommands(base.PythonAPITestCase):

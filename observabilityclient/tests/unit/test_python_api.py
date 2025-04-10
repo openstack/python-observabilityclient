@@ -34,6 +34,7 @@ class QueryManagerTest(testtools.TestCase):
         self.rbac = mock.Mock(wraps=rbac.Rbac(self.client, mock.Mock()))
         self.rbac.default_labels = {'project': 'project_id'}
         self.rbac.rbac_init_succesful = True
+        self.rbac.disable_rbac = False
 
         self.manager = python_api.QueryManager(self.client)
 
@@ -41,15 +42,32 @@ class QueryManagerTest(testtools.TestCase):
         self.client.query = self.manager
 
     def test_list(self):
-        returned_by_prom = {'data': ['metric1', 'test42', 'abc2']}
+        returned_by_prom_rbac = {
+            'data': [
+                {
+                    '__name__': 'metric1',
+                    'label1': 'foo'
+                },
+                {
+                    '__name__': 'test42',
+                    'anotherlabel': 'bar'
+                },
+                {
+                    '__name__': 'abc2',
+                }
+            ]
+        }
+        returned_by_prom_no_rbac = {'data': ['metric1', 'test42', 'abc2']}
         expected = ['abc2', 'metric1', 'test42']
 
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
-                               return_value=returned_by_prom):
+                               return_value=returned_by_prom_rbac):
             ret1 = self.manager.list()
-            ret2 = self.manager.list(disable_rbac=True)
-
         self.assertEqual(expected, ret1)
+
+        with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
+                               return_value=returned_by_prom_no_rbac):
+            ret2 = self.manager.list(disable_rbac=True)
         self.assertEqual(expected, ret2)
 
     def test_show(self):
@@ -79,7 +97,8 @@ class QueryManagerTest(testtools.TestCase):
         self.assertThat(ret2, expected_matcher)
 
     def test_query(self):
-        query = 'some_metric'
+        queried_metric_name = 'some_metric'
+        query = queried_metric_name
         returned_by_prom = {
             'data': {
                 'resultType': 'non-vector'
@@ -92,7 +111,9 @@ class QueryManagerTest(testtools.TestCase):
         expected = [prometheus_client.PrometheusMetric(returned_by_prom)]
         expected_matcher = MetricListMatcher(expected)
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
-                               return_value=returned_by_prom):
+                               return_value=returned_by_prom), \
+                mock.patch.object(python_api.QueryManager, 'list',
+                                  return_value=queried_metric_name):
             ret1 = self.manager.query(query)
             self.rbac.enrich_query.assert_called_with(query,
                                                       disable_rbac=False)

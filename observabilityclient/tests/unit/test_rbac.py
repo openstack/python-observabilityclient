@@ -29,6 +29,7 @@ class RbacTest(testtools.TestCase):
         self.rbac.default_labels = {
             "project": self.rbac.project_id
         }
+        self.rbac.disable_rbac = False
 
     def test_constructor(self):
         with mock.patch.object(session.Session, 'get_project_id',

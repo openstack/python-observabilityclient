@@ -8,16 +8,26 @@
     required-projects:
       - openstack/python-observabilityclient
       - openstack/ceilometer
-      - infrawatch/sg-core
+      - openstack-k8s-operators/sg-core
+      - openstack/devstack-plugin-prometheus
     timeout: 4200
     vars:
       devstack_localrc:
         USE_PYTHON3: True
         PROMETHEUS_SERVICE_SCRAPE_TARGETS: prometheus,sg-core
         CEILOMETER_BACKEND: sg-core
+        PROMETHEUS_CONF_DIR: /opt/stack
+        PROMETHEUS_CONFIG_FILE: /opt/stack/prometheus.yml
+        PROMETHEUS_CLIENT_CONF_DIR: /etc/openstack
       devstack_plugins:
-        sg-core: https://github.com/infrawatch/sg-core
+        sg-core: https://github.com/openstack-k8s-operators/sg-core
         ceilometer: https://opendev.org/openstack/ceilometer
+        devstack-plugin-prometheus: https://opendev.org/openstack/devstack-plugin-prometheus
+      devstack_services:
+        node_exporter: false
+      zuul_copy_output:
+        /etc/prometheus/prometheus.yml: logs
+        /etc/openstack/prometheus.yaml: logs
 
 - project:
     queue: telemetry

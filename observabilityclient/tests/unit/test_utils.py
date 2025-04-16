@@ -55,19 +55,20 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("somehost:1234")
+        m.assert_called_with("somehost:1234", None)
 
-    def test_get_prometheus_client_env_overide(self):
-        with mock.patch.dict(os.environ, {'PROMETHEUS_HOST': 'env_overide'}), \
+    def test_get_prometheus_client_env_override(self):
+        with mock.patch.dict(os.environ,
+                             {'PROMETHEUS_HOST': 'env_override'}), \
                 mock.patch.object(metric_utils, 'get_config_file',
                                   return_value=self.config_file), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("env_overide:1234")
+        m.assert_called_with("env_override:1234", None)
 
     def test_get_prometheus_client_no_config_file(self):
-        patched_env = {'PROMETHEUS_HOST': 'env_overide',
+        patched_env = {'PROMETHEUS_HOST': 'env_override',
                        'PROMETHEUS_PORT': 'env_port'}
         with mock.patch.dict(os.environ, patched_env), \
                 mock.patch.object(metric_utils, 'get_config_file',
@@ -75,7 +76,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("env_overide:env_port")
+        m.assert_called_with("env_override:env_port", None)
 
     def test_get_prometheus_client_missing_configuration(self):
         with mock.patch.dict(os.environ, {}), \

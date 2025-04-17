@@ -85,7 +85,8 @@ class PrometheusAPIClientTestBase(testtools.TestCase):
 class PrometheusAPIClientTest(PrometheusAPIClientTestBase):
     def test_get(self):
         url = "test"
-        expected_url = "http://localhost:9090/api/v1/test"
+        root_path = "root_path"
+        expected_url = f"http://localhost:9090/{root_path}/api/v1/{url}"
 
         params = {"query": "ceilometer_image_size{publisher='localhost'}"}
         expected_params = params
@@ -93,7 +94,8 @@ class PrometheusAPIClientTest(PrometheusAPIClientTestBase):
         return_value = self.GoodResponse()
         with mock.patch.object(requests.Session, 'get',
                                return_value=return_value) as m:
-            c = client.PrometheusAPIClient("localhost:9090")
+            c = client.PrometheusAPIClient("localhost:9090",
+                                           root_path=root_path)
             c._get(url, params)
 
         m.assert_called_with(expected_url,
@@ -121,7 +123,7 @@ class PrometheusAPIClientTest(PrometheusAPIClientTestBase):
 
     def test_post(self):
         url = "test"
-        expected_url = "http://localhost:9090/api/v1/test"
+        expected_url = f"http://localhost:9090/api/v1/{url}"
 
         params = {"query": "ceilometer_image_size{publisher='localhost'}"}
         expected_params = params

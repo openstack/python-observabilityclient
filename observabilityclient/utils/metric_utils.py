@@ -45,7 +45,7 @@ def get_config_file():
     return None
 
 
-def get_prometheus_client():
+def get_prometheus_client(session=None):
     host = None
     port = None
     ca_cert = None
@@ -71,7 +71,7 @@ def get_prometheus_client():
     if host is None or port is None:
         raise ConfigurationError("Can't find prometheus host and "
                                  "port configuration.")
-    client = PrometheusAPIClient(f"{host}:{port}")  # noqa: E231
+    client = PrometheusAPIClient(f"{host}:{port}", session)  # noqa: E231
     if ca_cert is not None:
         client.set_ca_cert(ca_cert)
     return client

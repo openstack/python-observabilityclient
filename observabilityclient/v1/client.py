@@ -38,7 +38,7 @@ class Client(object):
 
         self.session = session
 
-        self.prometheus_client = get_prometheus_client()
+        self.prometheus_client = get_prometheus_client(session)
         self.query = python_api.QueryManager(self)
         self.rbac = rbac.PromQLRbac(
             self.prometheus_client,

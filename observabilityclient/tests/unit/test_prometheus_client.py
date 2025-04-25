@@ -98,7 +98,8 @@ class PrometheusAPIClientTest(PrometheusAPIClientTestBase):
 
         m.assert_called_with(expected_url,
                              params=expected_params,
-                             headers={'Accept': 'application/json'})
+                             headers={'Accept': 'application/json',
+                                      'Accept-Encoding': 'identity'})
 
     def test_get_error(self):
         url = "test"

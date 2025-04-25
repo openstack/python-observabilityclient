@@ -53,9 +53,12 @@ class PrometheusMetric(object):
 
 
 class PrometheusAPIClient(object):
-    def __init__(self, host):
+    def __init__(self, host, session=None):
         self._host = host
-        self._session = requests.Session()
+        if session is None:
+            self._session = requests.Session()
+        else:
+            self._session = session
         self._session.verify = False
 
     def set_ca_cert(self, ca_cert):
@@ -75,7 +78,8 @@ class PrometheusAPIClient(object):
     def _get(self, endpoint, params=None):
         url = self._get_url(endpoint)
         resp = self._session.get(url, params=params,
-                                 headers={'Accept': 'application/json'})
+                                 headers={'Accept': 'application/json',
+                                          'Accept-Encoding': 'identity'})
         if resp.status_code != requests.codes.ok:
             raise PrometheusAPIClientError(resp)
         decoded = resp.json()

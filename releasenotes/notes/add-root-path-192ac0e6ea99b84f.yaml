@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    Added a "root_path" configuration option with a PROMETHEUS_ROOT_PATH
+    environment variable override, which allows to set a root path, which gets
+    prepended to the URL path section for each Prometheus API call. So for
+    example when Prometheus is hosted on localhost:80/prometheus, setting the
+    root_path to "prometheus" will enable the observabilityclient to send
+    requests to URLs like localhost:80/prometheus/api/v1/labels.

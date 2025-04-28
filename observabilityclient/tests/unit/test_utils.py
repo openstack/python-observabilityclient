@@ -55,7 +55,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("somehost:1234", None)
+        m.assert_called_with("somehost:1234", None, "")
 
     def test_get_prometheus_client_env_override(self):
         with mock.patch.dict(os.environ,
@@ -65,7 +65,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("env_override:1234", None)
+        m.assert_called_with("env_override:1234", None, "")
 
     def test_get_prometheus_client_no_config_file(self):
         patched_env = {'PROMETHEUS_HOST': 'env_override',
@@ -76,7 +76,19 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("env_override:env_port", None)
+        m.assert_called_with("env_override:env_port", None, "")
+
+    def test_get_prometheus_client_prefix_in_env_variable(self):
+        patched_env = {'PROMETHEUS_HOST': 'env_override',
+                       'PROMETHEUS_PORT': 'env_port',
+                       'PROMETHEUS_ROOT_PATH': 'root_path_env'}
+        with mock.patch.dict(os.environ, patched_env), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as m:
+            metric_utils.get_prometheus_client()
+        m.assert_called_with("env_override:env_port", None, "root_path_env")
 
     def test_get_prometheus_client_missing_configuration(self):
         with mock.patch.dict(os.environ, {}), \

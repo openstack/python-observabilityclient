@@ -53,13 +53,18 @@ class PrometheusMetric(object):
 
 
 class PrometheusAPIClient(object):
-    def __init__(self, host, session=None):
+    def __init__(self, host, session=None, root_path=""):
         self._host = host
+        if not self._host.endswith('/'):
+            self._host += '/'
         if session is None:
             self._session = requests.Session()
         else:
             self._session = session
         self._session.verify = False
+        self._root_path = root_path
+        if root_path != "" and not self._root_path.endswith('/'):
+            self._root_path += '/'
 
     def set_ca_cert(self, ca_cert):
         self._session.verify = ca_cert
@@ -73,7 +78,7 @@ class PrometheusAPIClient(object):
 
     def _get_url(self, endpoint):
         scheme = 'https' if self._session.verify else 'http'
-        return f"{scheme}://{self._host}/api/v1/{endpoint}"  # noqa: E231
+        return f"{scheme}://{self._host}{self._root_path}api/v1/{endpoint}"
 
     def _get(self, endpoint, params=None):
         url = self._get_url(endpoint)

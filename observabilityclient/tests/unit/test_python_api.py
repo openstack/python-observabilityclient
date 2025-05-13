@@ -40,33 +40,16 @@ class QueryManagerTest(testtools.TestCase):
         self.client.query = self.manager
 
     def test_list(self):
-        returned_by_prom_rbac = {
-            'data': [
-                {
-                    '__name__': 'metric1',
-                    'label1': 'foo'
-                },
-                {
-                    '__name__': 'test42',
-                    'anotherlabel': 'bar'
-                },
-                {
-                    '__name__': 'abc2',
-                }
-            ]
-        }
-        returned_by_prom_no_rbac = {'data': ['metric1', 'test42', 'abc2']}
+        returned_data = {'data': ['metric1', 'test42', 'abc2']}
         expected = ['abc2', 'metric1', 'test42']
 
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
-                               return_value=returned_by_prom_rbac):
+                               return_value=returned_data):
             ret1 = self.manager.list()
-        self.assertEqual(expected, ret1)
+            self.assertEqual(expected, ret1)
 
-        with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
-                               return_value=returned_by_prom_no_rbac):
             ret2 = self.manager.list(disable_rbac=True)
-        self.assertEqual(expected, ret2)
+            self.assertEqual(expected, ret2)
 
     def test_show(self):
         query = 'some_metric'
@@ -90,7 +73,7 @@ class QueryManagerTest(testtools.TestCase):
         with mock.patch.object(prometheus_client.PrometheusAPIClient, '_get',
                                return_value=returned_by_prom):
             ret1 = self.manager.show(query)
-            self.rbac.append_rbac_labels.assert_called_with(query)
+            self.rbac.append_rbac_labels.assert_not_called()
 
         self.assertThat(ret1, expected_matcher)
         self.assertThat(ret2, expected_matcher)
@@ -118,7 +101,7 @@ class QueryManagerTest(testtools.TestCase):
             self.rbac.modify_query.assert_not_called()
 
             ret2 = self.manager.query(query)
-            self.rbac.modify_query.assert_called_with(query)
+            self.rbac.modify_query.assert_not_called()
 
         self.assertThat(ret1, expected_matcher)
         self.assertThat(ret2, expected_matcher)

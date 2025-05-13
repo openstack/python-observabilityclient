@@ -13,9 +13,28 @@
 #   under the License.
 #
 
+import argparse
+import sys
+
 from osc_lib.command import command
 
 from observabilityclient.i18n import _
+
+
+class DeprecatedNOOPAction(argparse.Action):
+    def __init__(self, *args, **kwargs):
+        kwargs['help'] = f"[DEPRECATED] {kwargs['help']}" \
+                         if 'help' in kwargs else \
+                         "[DEPRECATED]"
+        kwargs['required'] = False
+        kwargs['nargs'] = 0
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if option_string is not None:
+            print(f"Note: {option_string} is deprecated option, "
+                  "has no effect and is a subject for removal "
+                  "in future OpenStack release.", file=sys.stderr)
 
 
 class ObservabilityBaseCommand(command.Command):
@@ -23,10 +42,10 @@ class ObservabilityBaseCommand(command.Command):
 
     def get_parser(self, prog_name):
         parser = super().get_parser(prog_name)
-        # TODO(jwysogla): Should this be restricted somehow?
         parser.add_argument(
             '--disable-rbac',
-            action='store_true',
+            action=DeprecatedNOOPAction,
+            default=True,
             help=_("Disable rbac injection")
         )
         return parser

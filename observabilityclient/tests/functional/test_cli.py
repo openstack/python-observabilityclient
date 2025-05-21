@@ -88,7 +88,7 @@ class CliTestFunctionalRBACEnabled(base.CliTestCase):
                 metric["__name__"]
             )
             self.assertEqual(
-                "sg-core",
+                "custom",
                 metric["job"]
             )
 
@@ -103,7 +103,7 @@ class CliTestFunctionalRBACEnabled(base.CliTestCase):
                 metric["__name__"]
             )
             self.assertEqual(
-                "sg-core",
+                "custom",
                 metric["job"]
             )
 

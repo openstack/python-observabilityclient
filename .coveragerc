@@ -1,0 +1,7 @@
+[run]
+branch = True
+source = observabilityclient
+omit = observabilityclient/tests/*
+
+[report]
+ignore_errors = True

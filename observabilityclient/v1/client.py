@@ -28,7 +28,7 @@ class Client(object):
         session_options = session_options or {}
         adapter_options = adapter_options or {}
 
-        adapter_options.setdefault('service_type', "metric")
+        adapter_options.setdefault('service_type', "prometheus")
 
         if session is None:
             session = keystoneauth1.session.Session(**session_options)
@@ -38,7 +38,9 @@ class Client(object):
 
         self.session = session
 
-        self.prometheus_client = get_prometheus_client(session)
+        self.prometheus_client = get_prometheus_client(
+            session, adapter_options
+        )
         self.query = python_api.QueryManager(self)
         self.rbac = rbac.PromQLRbac(
             self.prometheus_client,

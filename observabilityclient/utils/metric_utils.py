@@ -14,7 +14,10 @@
 
 import logging
 import os
+from urllib import parse
 
+from keystoneauth1 import adapter
+from keystoneauth1.exceptions import catalog as keystone_exception
 import yaml
 
 from observabilityclient.prometheus_client import PrometheusAPIClient
@@ -45,7 +48,7 @@ def get_config_file():
     return None
 
 
-def get_prometheus_client(session=None):
+def get_prometheus_client(session=None, adapter_options={}):
     host = None
     port = None
     ca_cert = None
@@ -63,6 +66,28 @@ def get_prometheus_client(session=None):
             root_path = conf['root_path']
         conf_file.close()
 
+    if session is not None and (host is None or port is None):
+        try:
+            endpoint = adapter.Adapter(
+                session=session, **adapter_options
+            ).get_endpoint()
+            parsed_url = parse.urlparse(endpoint)
+            host = parsed_url.hostname
+            port = parsed_url.port if parsed_url.port is not None else 80
+            root_path = parsed_url.path.strip('/')
+            if parsed_url.scheme == "https" and ca_cert is None:
+                # NOTE(jwysogla): Use the default CA certs if the scheme
+                # is https, but keep the original value if already set,
+                # so that a custom certificate can be set in the config
+                # file, while the endpoint is retrieved from keystone.
+                ca_cert = True
+        except keystone_exception.EndpointNotFound:
+            # NOTE(jwysogla): Don't do anything here. It's still possible
+            # to get the correct endpoint configuration from the env vars.
+            # If that doesn't work, the same error message is part of the
+            # exception raised below.
+            pass
+
     # NOTE(jwysogla): We allow to overide the prometheus.yaml by
     #                 the environment variables
     if 'PROMETHEUS_HOST' in os.environ:
@@ -75,7 +100,8 @@ def get_prometheus_client(session=None):
         root_path = os.environ['PROMETHEUS_ROOT_PATH']
     if host is None or port is None:
         raise ConfigurationError("Can't find prometheus host and "
-                                 "port configuration.")
+                                 "port configuration and endpoint for service"
+                                 "prometheus not found.")
     client = PrometheusAPIClient(f"{host}:{port}", session, root_path)
     if ca_cert is not None:
         client.set_ca_cert(ca_cert)

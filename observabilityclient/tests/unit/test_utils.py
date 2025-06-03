@@ -15,6 +15,8 @@
 import os
 from unittest import mock
 
+from keystoneauth1 import adapter
+from keystoneauth1 import session
 import testtools
 
 from observabilityclient import prometheus_client
@@ -98,6 +100,62 @@ class GetPrometheusClientTest(testtools.TestCase):
                                   "__init__", return_value=None):
             self.assertRaises(metric_utils.ConfigurationError,
                               metric_utils.get_prometheus_client)
+
+    def test_get_prometheus_client_from_keystone_http(self):
+        prometheus_endpoint = "http://localhost:1234/prometheus"
+        keystone_session = session.Session()
+        with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prometheus_endpoint), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as init_m, \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "set_ca_cert") as ca_m:
+            metric_utils.get_prometheus_client(keystone_session)
+        init_m.assert_called_with(
+            "localhost:1234", keystone_session, "prometheus"
+        )
+        ca_m.assert_not_called()
+
+    def test_get_prometheus_client_from_keystone_https(self):
+        prometheus_endpoint = "https://localhost:1234/prometheus"
+        keystone_session = session.Session()
+        with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prometheus_endpoint), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as init_m, \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "set_ca_cert") as ca_m:
+            metric_utils.get_prometheus_client(keystone_session)
+        init_m.assert_called_with(
+            "localhost:1234", keystone_session, "prometheus"
+        )
+        ca_m.assert_called_with(True)
+
+    def test_get_prometheus_client_from_keystone_custom_ca(self):
+        prometheus_endpoint = "https://localhost:1234/prometheus"
+        keystone_session = session.Session()
+        config_data = 'ca_cert: "ca/path"'
+        config_file = mock.mock_open(read_data=config_data)("name", 'r')
+        with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=config_file), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prometheus_endpoint), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as init_m, \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "set_ca_cert") as ca_m:
+            metric_utils.get_prometheus_client(keystone_session)
+        init_m.assert_called_with(
+            "localhost:1234", keystone_session, "prometheus"
+        )
+        ca_m.assert_called_with("ca/path")
 
 
 class FormatLabelsTest(testtools.TestCase):

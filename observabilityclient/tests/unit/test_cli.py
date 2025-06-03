@@ -43,8 +43,9 @@ class CliTest(testtools.TestCase):
                                return_value=self.client), \
                 mock.patch.object(self.client.query, 'list',
                                   return_value=metric_names) as m:
+            # NOTE: disable-rbac option is NOOP, RBAC is disabled by default
             ret1 = cli_list.take_action(test_parsed_args_enabled)
-            m.assert_called_with(disable_rbac=False)
+            m.assert_called_with(disable_rbac=True)
 
             ret2 = cli_list.take_action(test_parsed_args_disabled)
             m.assert_called_with(disable_rbac=True)
@@ -75,9 +76,9 @@ class CliTest(testtools.TestCase):
                                return_value=self.client), \
                 mock.patch.object(self.client.query, 'show',
                                   return_value=prom_metric) as m:
-
+            # NOTE: disable-rbac option is NOOP, RBAC is disabled by default
             ret1 = cli_show.take_action(test_parsed_args_enabled)
-            m.assert_called_with('metric_name', disable_rbac=False)
+            m.assert_called_with('metric_name', disable_rbac=True)
 
             ret2 = cli_show.take_action(test_parsed_args_disabled)
             m.assert_called_with('metric_name', disable_rbac=True)
@@ -113,8 +114,9 @@ class CliTest(testtools.TestCase):
                 mock.patch.object(self.client.query, 'query',
                                   return_value=prom_metric) as m:
 
+            # NOTE: disable-rbac option is NOOP, RBAC is disabled by default
             ret1 = cli_query.take_action(test_parsed_args_enabled)
-            m.assert_called_with(query, disable_rbac=False)
+            m.assert_called_with(query, disable_rbac=True)
 
             ret2 = cli_query.take_action(test_parsed_args_disabled)
             m.assert_called_with(query, disable_rbac=True)

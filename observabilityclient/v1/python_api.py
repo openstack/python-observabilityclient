@@ -17,7 +17,7 @@ from observabilityclient.v1 import base
 
 
 class QueryManager(base.Manager):
-    def list(self, disable_rbac=False):
+    def list(self, disable_rbac=True):
         """List metric names.
 
         :param disable_rbac: Disables rbac injection if set to True
@@ -34,7 +34,7 @@ class QueryManager(base.Manager):
             unique_metric_names = list(set([m['__name__'] for m in metrics]))
             return sorted(unique_metric_names)
 
-    def show(self, name, disable_rbac=False):
+    def show(self, name, disable_rbac=True):
         """Show current values for metrics of a specified name.
 
         :param disable_rbac: Disables rbac injection if set to True
@@ -48,7 +48,7 @@ class QueryManager(base.Manager):
         last_metric_query = f"last_over_time({query}[5m])"
         return self.prom.query(last_metric_query)
 
-    def query(self, query, disable_rbac=False):
+    def query(self, query, disable_rbac=True):
         """Send a query to prometheus.
 
         The query can be any PromQL query. Labels for enforcing

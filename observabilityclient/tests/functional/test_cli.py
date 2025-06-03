@@ -14,98 +14,56 @@ from observabilityclient.tests.functional import base
 import time
 
 
-class CliTestFunctionalRBACDisabled(base.CliTestCase):
-    """Functional tests for cli commands with disabled RBAC."""
+class CliTestFunctionalRBACNOOP(base.CliTestCase):
+    """Functional tests for cli commands testing RBAC option."""
 
     def test_list(self):
-        cmd_output = self.openstack(
-            'metric list --disable-rbac',
-            parse_output=True,
-        )
-        name_list = [item.get('metric_name') for item in cmd_output]
-        self.assertIn(
-            'up',
-            name_list
-        )
+        for cmdstr in ('metric list', 'metric list --disable-rbac'):
+            cmd_output = self.openstack(
+                cmdstr,
+                parse_output=True,
+            )
+            name_list = [item.get('metric_name') for item in cmd_output]
+            self.assertIn(
+                'ceilometer_image_size',
+                name_list
+            )
+            self.assertIn(
+                'up',
+                name_list
+            )
 
     def test_show(self):
-        cmd_output = self.openstack(
-            'metric show up --disable-rbac',
-            parse_output=True,
-        )
-        for metric in cmd_output:
-            self.assertEqual(
-                "up",
-                metric["__name__"]
+        for cmdstr in ('metric show up', 'metric show up --disable-rbac'):
+            cmd_output = self.openstack(
+                cmdstr,
+                parse_output=True,
             )
-            self.assertEqual(
-                "1",
-                metric["value"]
-            )
+            for metric in cmd_output:
+                self.assertEqual(
+                    "up",
+                    metric["__name__"]
+                )
+                self.assertEqual(
+                    "1",
+                    metric["value"]
+                )
 
     def test_query(self):
-        cmd_output = self.openstack(
-            'metric query up --disable-rbac',
-            parse_output=True,
-        )
-        for metric in cmd_output:
-            self.assertEqual(
-                "up",
-                metric["__name__"]
+        for cmdstr in ('metric query up', 'metric query up --disable-rbac'):
+            cmd_output = self.openstack(
+                cmdstr,
+                parse_output=True,
             )
-            self.assertEqual(
-                "1",
-                metric["value"]
-            )
-
-
-class CliTestFunctionalRBACEnabled(base.CliTestCase):
-    """Functional tests for cli commands with enabled RBAC."""
-
-    def test_list(self):
-        cmd_output = self.openstack(
-            'metric list',
-            parse_output=True,
-        )
-        name_list = [item.get('metric_name') for item in cmd_output]
-        self.assertIn(
-            'ceilometer_image_size',
-            name_list
-        )
-        self.assertNotIn(
-            'up',
-            name_list
-        )
-
-    def test_show(self):
-        cmd_output = self.openstack(
-            'metric show ceilometer_image_size',
-            parse_output=True,
-        )
-        for metric in cmd_output:
-            self.assertEqual(
-                "ceilometer_image_size",
-                metric["__name__"]
-            )
-            self.assertEqual(
-                "custom",
-                metric["job"]
-            )
-
-    def test_query(self):
-        cmd_output = self.openstack(
-            'metric query ceilometer_image_size',
-            parse_output=True,
-        )
-        for metric in cmd_output:
-            self.assertEqual(
-                "ceilometer_image_size",
-                metric["__name__"]
-            )
-            self.assertEqual(
-                "custom",
-                metric["job"]
-            )
+            for metric in cmd_output:
+                self.assertEqual(
+                    "up",
+                    metric["__name__"]
+                )
+                self.assertEqual(
+                    "1",
+                    metric["value"]
+                )
 
 
 class CliTestFunctionalAdminCommands(base.CliTestCase):

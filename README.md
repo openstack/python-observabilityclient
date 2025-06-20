@@ -13,7 +13,7 @@ Install your OpenStack environment and patch your `openstack` client application
 su - stack
 
 # clone and install observability client plugin
-git clone https://github.com/infrawatch/python-observabilityclient
+git clone https://opendev.org/openstack/python-observabilityclient.git
 cd python-observabilityclient
 sudo python setup.py install --prefix=/usr
 ```

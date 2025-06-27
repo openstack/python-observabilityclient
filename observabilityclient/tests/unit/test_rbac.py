@@ -167,6 +167,12 @@ class PromQLRbacTest(testtools.TestCase):
                  f"{{project='{self.project_id}'}}"
                  f"[10m])))"
                  )
+            ), (
+                "test_query{project='some_id'}",
+
+                (f"test_query{{project='some_id', "
+                 f"project='{self.project_id}'}}"
+                 )
             )
         ]
 

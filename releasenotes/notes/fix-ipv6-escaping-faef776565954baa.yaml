@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixed broken handling of IPv6 address host, caused by missing host escape.

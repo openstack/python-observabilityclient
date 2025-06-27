@@ -18,6 +18,7 @@ from urllib import parse
 
 from keystoneauth1 import adapter
 from keystoneauth1.exceptions import catalog as keystone_exception
+from oslo_utils import netutils
 import yaml
 
 from observabilityclient.prometheus_client import PrometheusAPIClient
@@ -102,7 +103,8 @@ def get_prometheus_client(session=None, adapter_options={}):
         raise ConfigurationError("Can't find prometheus host and "
                                  "port configuration and endpoint for service"
                                  "prometheus not found.")
-    client = PrometheusAPIClient(f"{host}:{port}", session, root_path)
+    escaped_host = netutils.escape_ipv6(host)
+    client = PrometheusAPIClient(f"{escaped_host}:{port}", session, root_path)
     if ca_cert is not None:
         client.set_ca_cert(ca_cert)
     return client

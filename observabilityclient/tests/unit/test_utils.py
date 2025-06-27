@@ -157,6 +157,51 @@ class GetPrometheusClientTest(testtools.TestCase):
         )
         ca_m.assert_called_with("ca/path")
 
+    def test_get_prometheus_client_from_env_vars_ipv6(self):
+        patched_env = {'PROMETHEUS_HOST': '2607:5300:201:2000::654',
+                       'PROMETHEUS_PORT': '1234'}
+        with mock.patch.dict(os.environ, patched_env), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as m:
+            metric_utils.get_prometheus_client()
+        m.assert_called_with("[2607:5300:201:2000::654]:1234", None, "")
+
+    def test_get_prometheus_client_from_conf_file_ipv6(self):
+        config_data = '''
+        host: "2607:5300:201:2000::654"
+        port: "80"
+        '''
+        config_file = mock.mock_open(read_data=config_data)("name", 'r')
+        with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=config_file), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as init_m:
+            metric_utils.get_prometheus_client()
+        init_m.assert_called_with(
+            "[2607:5300:201:2000::654]:80", None, ""
+        )
+
+    def test_get_prometheus_client_from_keystone_ipv6(self):
+        prometheus_endpoint = "http://[2607:5300:201:2000::654]:80/prometheus"
+        keystone_session = session.Session()
+        with mock.patch.dict(os.environ, {}), \
+                mock.patch.object(metric_utils, 'get_config_file',
+                                  return_value=None), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prometheus_endpoint), \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "__init__", return_value=None) as init_m, \
+                mock.patch.object(prometheus_client.PrometheusAPIClient,
+                                  "set_ca_cert") as ca_m:
+            metric_utils.get_prometheus_client(keystone_session)
+        init_m.assert_called_with(
+            "[2607:5300:201:2000::654]:80", keystone_session, "prometheus"
+        )
+        ca_m.assert_not_called()
+
 
 class FormatLabelsTest(testtools.TestCase):
     def setUp(self):

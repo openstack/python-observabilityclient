@@ -22,7 +22,7 @@ from observabilityclient import client
 
 from keystoneauth1 import loading
 from keystoneauth1 import session
-import os_client_config
+from openstack import config as occ
 from tempest.lib.cli import output_parser
 from tempest.lib import exceptions
 import testtools
@@ -33,8 +33,8 @@ LOG = logging.getLogger(__name__)
 
 class PythonAPITestCase(testtools.TestCase):
     def _getKeystoneSession(self):
-        conf = os_client_config.OpenStackConfig()
-        creds = conf.get_one_cloud(cloud=ADMIN_CLOUD).get_auth_args()
+        conf = occ.OpenStackConfig()
+        creds = conf.get_one(cloud=ADMIN_CLOUD).get_auth_args()
         ks_creds = dict(
             auth_url=creds["auth_url"],
             username=creds["username"],

@@ -27,15 +27,17 @@ class PromQLRbacTest(testtools.TestCase):
         self.rbac.labels = {
             "project": "project123"
         }
-        self.rbac.client.label_values = lambda label: [
-            'test_query',
-            'cpu_temp_celsius',
-            'http_requests',
-            'test:query:with:colon:',
-            'test_query_with_digit1',
-            'method_code:http_errors:rate5m',
-            'method:http_requests:rate5m'
-        ]
+        self.rbac.client.label_values = mock.MagicMock(
+            return_value=[
+                'test_query',
+                'cpu_temp_celsius',
+                'http_requests',
+                'test:query:with:colon:',
+                'test_query_with_digit1',
+                'method_code:http_errors:rate5m',
+                'method:http_requests:rate5m'
+            ]
+        )
         self.test_cases = [
             (
                 "test_query",
@@ -227,3 +229,29 @@ class PromQLRbacTest(testtools.TestCase):
         kwargs = {'project_label': project_label}
 
         self.assertRaises(ValueError, rbac.PromQLRbac, *args, **kwargs)
+
+    def test_specifying_metric_names(self):
+        query = "test_query"
+        metric_names = [
+            "metric_name1",
+            "foo",
+            "bar",
+            "test_query"
+        ]
+
+        expected = "test_query{project='project123'}"
+
+        ret = self.rbac.modify_query(query, metric_names)
+
+        self.assertEqual(expected, ret)
+        self.rbac.client.label_values.assert_not_called()
+
+    def test_not_specifying_metric_names(self):
+        query = "test_query"
+
+        expected = "test_query{project='project123'}"
+
+        ret = self.rbac.modify_query(query)
+
+        self.assertEqual(expected, ret)
+        self.rbac.client.label_values.assert_called_once()

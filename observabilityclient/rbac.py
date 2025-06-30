@@ -97,14 +97,27 @@ class PromQLRbac(object):
                 f"{labels_str}"
                 f"{query[location:]}")
 
-    def modify_query(self, query):
+    def modify_query(self, query, metric_names=None):
         """Add rbac labels to a query.
 
         :param query: The query to modify
         :type query: str
+
+        :param metric_names: List of metric names currently stored in
+                             prometheus. For correct function of the query
+                             modification, it's important for the list to be
+                             accurate and to include all metrics across all
+                             tenants. This parameter can be unspecified or
+                             None, in which case the list will be retrieved
+                             from Prometheus by sending an API request to it.
+                             It's advised to provide the metric list when
+                             doing a query modification in a loop for
+                             performance purposes.
+        :type metric_names: list
         """
-        # We need to get all metric names, no matter the rbac
-        metric_names = self.client.label_values("__name__")
+
+        if metric_names is None:
+            metric_names = self.client.label_values("__name__")
 
         # We need to detect the locations of metric names
         # inside the query

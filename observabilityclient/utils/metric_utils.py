@@ -54,6 +54,8 @@ def get_prometheus_client(session=None, adapter_options={}):
     port = None
     ca_cert = None
     root_path = ""
+    is_aetos = False
+
     conf_file = get_config_file()
     if conf_file is not None:
         conf = yaml.safe_load(conf_file)
@@ -71,8 +73,8 @@ def get_prometheus_client(session=None, adapter_options={}):
         try:
             endpoint = adapter.Adapter(
                 session=session, **adapter_options
-            ).get_endpoint()
-            parsed_url = parse.urlparse(endpoint)
+            ).get_endpoint_data()
+            parsed_url = parse.urlparse(endpoint.catalog_url)
             host = parsed_url.hostname
             port = parsed_url.port if parsed_url.port is not None else 80
             root_path = parsed_url.path.strip('/')
@@ -82,6 +84,11 @@ def get_prometheus_client(session=None, adapter_options={}):
                 # so that a custom certificate can be set in the config
                 # file, while the endpoint is retrieved from keystone.
                 ca_cert = True
+            if (endpoint.service_type == "prometheus" and
+                    endpoint.service_name == "aetos"):
+                # We know this is Aetos and we can include keystone tokens
+                # when sending requests to it.
+                is_aetos = True
         except keystone_exception.EndpointNotFound:
             # NOTE(jwysogla): Don't do anything here. It's still possible
             # to get the correct endpoint configuration from the env vars.
@@ -104,7 +111,14 @@ def get_prometheus_client(session=None, adapter_options={}):
                                  "port configuration and endpoint for service"
                                  "prometheus not found.")
     escaped_host = netutils.escape_ipv6(host)
-    client = PrometheusAPIClient(f"{escaped_host}:{port}", session, root_path)
+    if is_aetos:
+        client = PrometheusAPIClient(
+            f"{escaped_host}:{port}", session, root_path
+        )
+    else:
+        client = PrometheusAPIClient(
+            f"{escaped_host}:{port}", None, root_path
+        )
     if ca_cert is not None:
         client.set_ca_cert(ca_cert)
     return client

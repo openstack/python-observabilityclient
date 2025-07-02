@@ -1,0 +1,9 @@
+---
+security:
+  - |
+    Modified the observabilityclient to send keystone token with each request
+    only when communicating with Aetos, instead of sending it everytime, which
+    could pose a security risk. This also restricts configuration
+    options for connecting to Aetos to keystone endpoints only. Configuration
+    for Prometheus is unchanged and can still be done through keystone
+    endpoint, through a configuration file or through environment variables.

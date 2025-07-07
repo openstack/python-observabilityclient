@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Allow for specifying project label name when creating an instance
+    of PromQLRbac. The change is backwards compatible, the same label
+    name 'project' is still being used as a default.

@@ -192,3 +192,38 @@ class PromQLRbacTest(testtools.TestCase):
         expected = f"{query}{{project='{self.project_id}'}}"
         ret = self.rbac.append_rbac_labels(query)
         self.assertEqual(expected, ret)
+
+    def test_setting_different_project_label_name(self):
+        query = 'test_query'
+        project_label = 'different_name'
+        project_value = 'some_project'
+
+        rbac_instance = rbac.PromQLRbac(
+            mock.Mock(), project_value, project_label=project_label
+        )
+        rbac_instance.client.label_values = lambda label: [
+            query,
+        ]
+
+        expected = f"{query}{{{project_label}='{project_value}'}}"
+
+        ret = rbac_instance.modify_query(query)
+
+        self.assertEqual(expected, ret)
+
+    def test_setting_illegal_project_label_name(self):
+        # Try setting a label name with a white space character inside
+        project_label = 'different name'
+        project_value = 'some_project'
+
+        args = (mock.Mock(), project_value)
+        kwargs = {'project_label': project_label}
+
+        self.assertRaises(ValueError, rbac.PromQLRbac, *args, **kwargs)
+
+        # Try setting an empty label name
+        project_label = ''
+
+        kwargs = {'project_label': project_label}
+
+        self.assertRaises(ValueError, rbac.PromQLRbac, *args, **kwargs)

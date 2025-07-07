@@ -18,10 +18,24 @@ from observabilityclient.utils.metric_utils import format_labels
 
 
 class PromQLRbac(object):
-    def __init__(self, prom_api_client, project_id):
+    def __init__(self, prom_api_client, project_id, project_label='project'):
         self.client = prom_api_client
+
+        # NOTE(jwysogla): Since Prometheus 3, metric and label names can
+        # utilize all unicode characters. But the syntax is a little different
+        # and some parts of the queries need to be quoted or escaped. The
+        # rest of this module doesn't support that right now, so use a
+        # Prometheus 2 regex and raise an exception when it doesn't match.
+        # See https://prometheus.io/docs/concepts/data_model/
+        label_name_regex = "[a-zA-Z_][a-zA-Z0-9_]*"
+        if not re.fullmatch(label_name_regex, project_label):
+            raise ValueError(
+                f"Project label {project_label} doesn't match the "
+                f"label name regex: {label_name_regex}"
+            )
+
         self.labels = {
-            "project": project_id
+            project_label: project_id
         }
 
     def _find_label_value_end(self, query, start, quote_char):

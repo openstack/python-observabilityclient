@@ -125,7 +125,7 @@ class PromQLRbac(object):
             name_end_locations = [0]
         for name_end_location in name_end_locations:
             if (name_end_location < len(query) and
-               query[name_end_location] == "{"):
+                    query[name_end_location] == "{"):
                 # There is already a label section
                 labels_end = self._find_label_section_end(
                     query,

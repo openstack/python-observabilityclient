@@ -49,13 +49,33 @@ def get_config_file():
     return None
 
 
-def get_prometheus_client(session=None, adapter_options={}):
-    host = None
-    port = None
-    ca_cert = None
-    root_path = ""
-    is_aetos = False
+def get_prom_client_from_keystone(session, adapter_options=None):
+    if adapter_options is None:
+        adapter_options = {}
+    endpoint = adapter.Adapter(
+        session=session, **adapter_options
+    ).get_endpoint()
+    parsed_url = parse.urlparse(endpoint)
 
+    escaped_host = netutils.escape_ipv6(parsed_url.hostname)
+    root_path = parsed_url.path.strip('/')
+    tls = parsed_url.scheme == "https"
+
+    if parsed_url.port is not None:
+        url = f'{escaped_host}:{parsed_url.port}'
+    else:
+        url = escaped_host
+
+    client = PrometheusAPIClient(url, session, root_path)
+
+    if tls:
+        client.set_ca_cert(True)
+    return client
+
+
+def get_prom_client_from_file_or_env():
+    host = port = ca_cert = None
+    root_path = ''
     conf_file = get_config_file()
     if conf_file is not None:
         conf = yaml.safe_load(conf_file)
@@ -68,37 +88,6 @@ def get_prometheus_client(session=None, adapter_options={}):
         if 'root_path' in conf:
             root_path = conf['root_path']
         conf_file.close()
-
-    if session is not None and (host is None or port is None):
-        try:
-            endpoint = adapter.Adapter(
-                session=session, **adapter_options
-            ).get_endpoint()
-            parsed_url = parse.urlparse(endpoint)
-            host = parsed_url.hostname
-            root_path = parsed_url.path.strip('/')
-            if parsed_url.scheme == "https" and ca_cert is None:
-                # NOTE(jwysogla): Use the default CA certs if the scheme
-                # is https, but keep the original value if already set,
-                # so that a custom certificate can be set in the config
-                # file, while the endpoint is retrieved from keystone.
-                ca_cert = True
-            if parsed_url.port is not None:
-                port = parsed_url.port
-            elif parsed_url.scheme == "https":
-                port = 443
-            else:
-                port = 80
-            is_aetos = True
-        except keystone_exception.EndpointNotFound:
-            # NOTE(jwysogla): Don't do anything here. It's still possible
-            # to get the correct endpoint configuration from the env vars.
-            # If that doesn't work, the same error message is part of the
-            # exception raised below.
-            pass
-
-    # NOTE(jwysogla): We allow to overide the prometheus.yaml by
-    #                 the environment variables
     if 'PROMETHEUS_HOST' in os.environ:
         host = os.environ['PROMETHEUS_HOST']
     if 'PROMETHEUS_PORT' in os.environ:
@@ -109,20 +98,46 @@ def get_prometheus_client(session=None, adapter_options={}):
         root_path = os.environ['PROMETHEUS_ROOT_PATH']
     if host is None or port is None:
         raise ConfigurationError("Can't find prometheus host and "
-                                 "port configuration and endpoint for "
-                                 "metric-storage not found.")
+                                 "port configuration in config file or "
+                                 "environment variables.")
     escaped_host = netutils.escape_ipv6(host)
-    if is_aetos:
-        client = PrometheusAPIClient(
-            f"{escaped_host}:{port}", session, root_path
-        )
-    else:
-        client = PrometheusAPIClient(
-            f"{escaped_host}:{port}", None, root_path
-        )
+    client = PrometheusAPIClient(
+        f"{escaped_host}:{port}", None, root_path
+    )
     if ca_cert is not None:
         client.set_ca_cert(ca_cert)
     return client
+
+
+def get_prometheus_client(session=None, adapter_options=None):
+    if adapter_options is None:
+        adapter_options = {}
+
+    keystone_error = None
+    if session is not None:
+        try:
+            return get_prom_client_from_keystone(session, adapter_options)
+        except keystone_exception.EndpointNotFound as e:
+            # NOTE(jwysogla): Fallback to get the endpoint configuration from
+            # the config file and env vars. If that doesn't work, the error
+            # message is raised as ConfigurationError later.
+            keystone_error = e
+            LOG.debug("Aetos endpoint discovery from Keystone failed: %s", e)
+
+    # NOTE(jwysogla): Always fallback to the original method of discovery
+    # through config file and env variables for backwards compatibility.
+    try:
+        return get_prom_client_from_file_or_env()
+    except ConfigurationError as e:
+        if keystone_error is not None:
+            raise ConfigurationError(
+                f"Failed to configure Prometheus client. "
+                f"Aetos discovery from keystone failed: '{keystone_error}'. "
+                f"Prometheus configuration from config file and environment "
+                f"variables failed: '{e}'"
+            )
+        else:
+            raise e
 
 
 def get_client(obj):

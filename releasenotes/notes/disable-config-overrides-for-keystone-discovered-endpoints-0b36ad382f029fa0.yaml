@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    Aetos endpoint information discovered from keystone can no longer
+    be overridden by a config file or by environment variables. From
+    now on, Aetos access must be fully discoverable from Keystone
+    endpoints only.

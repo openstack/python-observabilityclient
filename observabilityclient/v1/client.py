@@ -28,7 +28,7 @@ class Client(object):
         session_options = session_options or {}
         adapter_options = adapter_options or {}
 
-        adapter_options.setdefault('service_type', "prometheus")
+        adapter_options.setdefault('service_type', "metric-storage")
 
         if session is None:
             session = keystoneauth1.session.Session(**session_options)

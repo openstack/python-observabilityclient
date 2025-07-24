@@ -1,0 +1,6 @@
+---
+other:
+  - |
+    Service type used to automatically discover Aetos endpoint from
+    keystone was changed from 'prometheus' to 'metric-storage'. The
+    service name is no longer required to be 'aetos'.

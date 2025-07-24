@@ -73,10 +73,9 @@ def get_prometheus_client(session=None, adapter_options={}):
         try:
             endpoint = adapter.Adapter(
                 session=session, **adapter_options
-            ).get_endpoint_data()
-            parsed_url = parse.urlparse(endpoint.catalog_url)
+            ).get_endpoint()
+            parsed_url = parse.urlparse(endpoint)
             host = parsed_url.hostname
-            port = parsed_url.port if parsed_url.port is not None else 80
             root_path = parsed_url.path.strip('/')
             if parsed_url.scheme == "https" and ca_cert is None:
                 # NOTE(jwysogla): Use the default CA certs if the scheme
@@ -84,11 +83,13 @@ def get_prometheus_client(session=None, adapter_options={}):
                 # so that a custom certificate can be set in the config
                 # file, while the endpoint is retrieved from keystone.
                 ca_cert = True
-            if (endpoint.service_type == "prometheus" and
-                    endpoint.service_name == "aetos"):
-                # We know this is Aetos and we can include keystone tokens
-                # when sending requests to it.
-                is_aetos = True
+            if parsed_url.port is not None:
+                port = parsed_url.port
+            elif parsed_url.scheme == "https":
+                port = 443
+            else:
+                port = 80
+            is_aetos = True
         except keystone_exception.EndpointNotFound:
             # NOTE(jwysogla): Don't do anything here. It's still possible
             # to get the correct endpoint configuration from the env vars.
@@ -108,8 +109,8 @@ def get_prometheus_client(session=None, adapter_options={}):
         root_path = os.environ['PROMETHEUS_ROOT_PATH']
     if host is None or port is None:
         raise ConfigurationError("Can't find prometheus host and "
-                                 "port configuration and endpoint for service"
-                                 "prometheus not found.")
+                                 "port configuration and endpoint for "
+                                 "metric-storage not found.")
     escaped_host = netutils.escape_ipv6(host)
     if is_aetos:
         client = PrometheusAPIClient(

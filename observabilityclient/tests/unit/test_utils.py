@@ -16,7 +16,6 @@ import os
 from unittest import mock
 
 from keystoneauth1 import adapter
-from keystoneauth1 import discover
 from keystoneauth1 import session
 import testtools
 
@@ -51,11 +50,6 @@ class GetPrometheusClientTest(testtools.TestCase):
         super(GetPrometheusClientTest, self).setUp()
         config_data = 'host: "somehost"\nport: "1234"'
         self.config_file = mock.mock_open(read_data=config_data)("name", 'r')
-        self.prom_endpoint_data = discover.EndpointData(
-            catalog_url="http://localhost:1234/prometheus",
-            service_type="prometheus",
-            service_name="aetos"
-        )
 
     def test_get_prometheus_client_from_file(self):
         with mock.patch.object(metric_utils, 'get_config_file',
@@ -108,12 +102,13 @@ class GetPrometheusClientTest(testtools.TestCase):
                               metric_utils.get_prometheus_client)
 
     def test_get_prometheus_client_from_keystone_http(self):
+        prom_endpoint = "http://localhost:1234/prometheus"
         keystone_session = session.Session()
         with mock.patch.dict(os.environ, {}), \
                 mock.patch.object(metric_utils, 'get_config_file',
                                   return_value=None), \
-                mock.patch.object(adapter.Adapter, 'get_endpoint_data',
-                                  return_value=self.prom_endpoint_data), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prom_endpoint), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as init_m, \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
@@ -125,14 +120,13 @@ class GetPrometheusClientTest(testtools.TestCase):
         ca_m.assert_not_called()
 
     def test_get_prometheus_client_from_keystone_https(self):
-        self.prom_endpoint_data.catalog_url = \
-            "https://localhost:1234/prometheus"
+        prom_endpoint = "https://localhost:1234/prometheus"
         keystone_session = session.Session()
         with mock.patch.dict(os.environ, {}), \
                 mock.patch.object(metric_utils, 'get_config_file',
                                   return_value=None), \
-                mock.patch.object(adapter.Adapter, 'get_endpoint_data',
-                                  return_value=self.prom_endpoint_data), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prom_endpoint), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as init_m, \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
@@ -144,16 +138,15 @@ class GetPrometheusClientTest(testtools.TestCase):
         ca_m.assert_called_with(True)
 
     def test_get_prometheus_client_from_keystone_custom_ca(self):
-        self.prom_endpoint_data.catalog_url = \
-            "https://localhost:1234/prometheus"
+        prom_endpoint = "https://localhost:1234/prometheus"
         keystone_session = session.Session()
         config_data = 'ca_cert: "ca/path"'
         config_file = mock.mock_open(read_data=config_data)("name", 'r')
         with mock.patch.dict(os.environ, {}), \
                 mock.patch.object(metric_utils, 'get_config_file',
                                   return_value=config_file), \
-                mock.patch.object(adapter.Adapter, 'get_endpoint_data',
-                                  return_value=self.prom_endpoint_data), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prom_endpoint), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as init_m, \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
@@ -192,14 +185,13 @@ class GetPrometheusClientTest(testtools.TestCase):
         )
 
     def test_get_prometheus_client_from_keystone_ipv6(self):
-        self.prom_endpoint_data.catalog_url = \
-            "http://[2607:5300:201:2000::654]:80/prometheus"
+        prom_endpoint = "http://[2607:5300:201:2000::654]:80/prometheus"
         keystone_session = session.Session()
         with mock.patch.dict(os.environ, {}), \
                 mock.patch.object(metric_utils, 'get_config_file',
                                   return_value=None), \
-                mock.patch.object(adapter.Adapter, 'get_endpoint_data',
-                                  return_value=self.prom_endpoint_data), \
+                mock.patch.object(adapter.Adapter, 'get_endpoint',
+                                  return_value=prom_endpoint), \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as init_m, \
                 mock.patch.object(prometheus_client.PrometheusAPIClient,

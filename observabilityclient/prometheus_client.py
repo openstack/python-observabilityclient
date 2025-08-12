@@ -70,8 +70,7 @@ class PrometheusAPIClient(object):
         self._session.verify = ca_cert
 
     def set_client_cert(self, client_cert, client_key):
-        self._session.cert = client_cert
-        self._session.key = client_key
+        self._session.cert = (client_cert, client_key)
 
     def set_basic_auth(self, auth_user, auth_password):
         self._session.auth = (auth_user, auth_password)

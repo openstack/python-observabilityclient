@@ -8,6 +8,7 @@ Contents
    :maxdepth: 2
 
    unreleased
+   2025.2
    2025.1
 
 Indices and tables

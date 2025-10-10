@@ -25,20 +25,20 @@ from observabilityclient.utils import metric_utils
 
 class GetConfigFileTest(testtools.TestCase):
     def setUp(self):
-        super(GetConfigFileTest, self).setUp()
+        super().setUp()
 
     def test_current_dir(self):
         with mock.patch.object(os.path, 'exists', return_value=True), \
                 mock.patch.object(metric_utils, 'open') as m:
             metric_utils.get_config_file()
-        m.assert_called_with(metric_utils.CONFIG_FILE_NAME, 'r')
+        m.assert_called_with(metric_utils.CONFIG_FILE_NAME)
 
     def test_path_order(self):
         expected = [mock.call(metric_utils.CONFIG_FILE_NAME, 'r'),
-                    mock.call((f"{os.environ['HOME']}/.config/openstack/"
-                               f"{metric_utils.CONFIG_FILE_NAME}")),
-                    mock.call((f"/etc/openstack/"
-                               f"{metric_utils.CONFIG_FILE_NAME}"))]
+                    mock.call(f"{os.environ['HOME']}/.config/openstack/"
+                              f"{metric_utils.CONFIG_FILE_NAME}"),
+                    mock.call(f"/etc/openstack/"
+                              f"{metric_utils.CONFIG_FILE_NAME}")]
         with mock.patch.object(os.path, 'exists', return_value=False) as m:
             ret = metric_utils.get_config_file()
         m.call_args_list == expected
@@ -47,7 +47,7 @@ class GetConfigFileTest(testtools.TestCase):
 
 class GetPrometheusClientTest(testtools.TestCase):
     def setUp(self):
-        super(GetPrometheusClientTest, self).setUp()
+        super().setUp()
         config_data = 'host: "somehost"\nport: "1234"'
         self.config_file = mock.mock_open(read_data=config_data)("name", 'r')
 
@@ -185,7 +185,7 @@ class GetPrometheusClientTest(testtools.TestCase):
 
 class FormatLabelsTest(testtools.TestCase):
     def setUp(self):
-        super(FormatLabelsTest, self).setUp()
+        super().setUp()
 
     def test_format_labels_with_normal_labels(self):
         input_dict = {"label_key1": "label_value1",
@@ -206,7 +206,7 @@ class FormatLabelsTest(testtools.TestCase):
 
 class Metrics2ColsTest(testtools.TestCase):
     def setUp(self):
-        super(Metrics2ColsTest, self).setUp()
+        super().setUp()
 
     def test_metrics2cols(self):
         metric = {

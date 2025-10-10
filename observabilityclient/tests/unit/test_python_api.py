@@ -26,7 +26,7 @@ from observabilityclient.v1 import python_api
 
 class QueryManagerTest(testtools.TestCase):
     def setUp(self):
-        super(QueryManagerTest, self).setUp()
+        super().setUp()
         self.client = mock.Mock()
         prom_client = prometheus_client.PrometheusAPIClient("somehost")
         self.client.prometheus_client = prom_client

@@ -51,7 +51,7 @@ class ObservabilityBaseCommand(command.Command):
         return parser
 
 
-class Manager(object):
+class Manager:
     """Base class for the python api."""
 
     DEFAULT_HEADERS = {

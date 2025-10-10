@@ -40,12 +40,12 @@ class ConfigurationError(Exception):
 def get_config_file():
     if os.path.exists(CONFIG_FILE_NAME):
         LOG.debug("Using %s as prometheus configuration", CONFIG_FILE_NAME)
-        return open(CONFIG_FILE_NAME, "r")
+        return open(CONFIG_FILE_NAME)
     for path in DEFAULT_CONFIG_LOCATIONS:
         full_filename = path + CONFIG_FILE_NAME
         if os.path.exists(full_filename):
             LOG.debug("Using %s as prometheus configuration", full_filename)
-            return open(full_filename, "r")
+            return open(full_filename)
     return None
 
 
@@ -154,7 +154,7 @@ def format_labels(d: dict) -> str:
 
     ret = ""
     for key, value in d.items():
-        ret += "{}='{}', ".format(key, value)
+        ret += f"{key}='{value}', "
     ret = ret[0:-2]
     old = ""
     while ret != old:

@@ -17,7 +17,7 @@ import re
 from observabilityclient.utils.metric_utils import format_labels
 
 
-class PromQLRbac(object):
+class PromQLRbac:
     def __init__(self, prom_api_client, project_id, project_label='project'):
         self.client = prom_api_client
 

@@ -19,7 +19,7 @@ from observabilityclient.utils.metric_utils import get_prometheus_client
 from observabilityclient.v1 import python_api
 
 
-class Client(object):
+class Client:
     """Client for the observabilityclient api."""
 
     def __init__(self, session=None, adapter_options=None,

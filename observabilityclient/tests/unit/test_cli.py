@@ -23,7 +23,7 @@ from observabilityclient.v1 import cli
 
 class CliTest(testtools.TestCase):
     def setUp(self):
-        super(CliTest, self).setUp()
+        super().setUp()
         self.client = mock.Mock()
         self.client.query = mock.Mock()
 

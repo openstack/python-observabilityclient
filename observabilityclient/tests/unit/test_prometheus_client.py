@@ -58,23 +58,23 @@ class MetricListMatcher(testtools.Matcher):
 
 class PrometheusAPIClientTestBase(testtools.TestCase):
     def setUp(self):
-        super(PrometheusAPIClientTestBase, self).setUp()
+        super().setUp()
 
-    class GoodResponse(object):
+    class GoodResponse:
         def __init__(self):
             self.status_code = 200
 
         def json(self):
             return {"status": "success"}
 
-    class BadResponse(object):
+    class BadResponse:
         def __init__(self):
             self.status_code = 500
 
         def json(self):
             return {"status": "error", "error": "test_error"}
 
-    class NoContentResponse(object):
+    class NoContentResponse:
         def __init__(self):
             self.status_code = 204
 

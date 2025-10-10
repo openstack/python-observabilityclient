@@ -21,7 +21,7 @@ from observabilityclient import rbac
 
 class PromQLRbacTest(testtools.TestCase):
     def setUp(self):
-        super(PromQLRbacTest, self).setUp()
+        super().setUp()
         self.project_id = "project123"
         self.rbac = rbac.PromQLRbac(mock.Mock(), mock.Mock())
         self.rbac.labels = {

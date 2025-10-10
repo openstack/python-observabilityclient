@@ -47,7 +47,7 @@ class PythonAPITestCase(testtools.TestCase):
         return session.Session(auth=auth)
 
     def setUp(self):
-        super(PythonAPITestCase, self).setUp()
+        super().setUp()
         self.client = client.Client(
             1,
             self._getKeystoneSession()

@@ -31,7 +31,7 @@ class QueryManager(base.Manager):
             metrics = self.prom.series(match)
             if metrics == []:
                 return []
-            unique_metric_names = list(set([m['__name__'] for m in metrics]))
+            unique_metric_names = list({m['__name__'] for m in metrics})
             return sorted(unique_metric_names)
 
     def show(self, name, disable_rbac=True):

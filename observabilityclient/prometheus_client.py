@@ -45,14 +45,14 @@ class PrometheusAPIClientError(Exception):
         return self.__str__()
 
 
-class PrometheusMetric(object):
+class PrometheusMetric:
     def __init__(self, input):
         self.timestamp = input['value'][0]
         self.labels = input['metric']
         self.value = input['value'][1]
 
 
-class PrometheusAPIClient(object):
+class PrometheusAPIClient:
     def __init__(self, host, session=None, root_path=""):
         self._host = host
         if not self._host.endswith('/'):

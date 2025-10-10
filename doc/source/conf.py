@@ -25,7 +25,7 @@ def gen_ref(ver, title, names):
     refdir = os.path.join(BASE_DIR, "ref")
     pkg = "observabilityclient"
     if ver:
-        pkg = "%s.%s" % (pkg, ver)
+        pkg = f"{pkg}.{ver}"
         refdir = os.path.join(refdir, ver)
     if not os.path.exists(refdir):
         os.makedirs(refdir)
@@ -54,6 +54,7 @@ def gen_ref(ver, title, names):
                              "signs": "=" * len(name),
                              "pkg": pkg, "name": name})
 
+
 gen_ref("v1", "Version 1 API", ["client", "python_api"])
 gen_ref("", "rbac", ["rbac"])
 
@@ -64,7 +65,7 @@ gen_ref("", "rbac", ["rbac"])
 extensions = [
     'sphinx.ext.autodoc',
     'openstackdocstheme',
-    #'sphinx.ext.intersphinx',
+    # 'sphinx.ext.intersphinx',
 ]
 
 # autodoc generation is a bit aggressive and a nuisance when doing heavy
@@ -81,7 +82,7 @@ master_doc = 'index'
 openstackdocs_repo_name = 'openstack/python-observabilityclient'
 openstackdocs_bug_project = 'python-observabilityclient'
 openstackdocs_bug_tag = ''
-copyright = u'2025, OpenStack Foundation'
+copyright = '2025, OpenStack Foundation'
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
 add_function_parentheses = True
@@ -103,7 +104,7 @@ pygments_style = 'native'
 html_theme = 'openstackdocs'
 
 # Add any paths that contain custom themes here, relative to this directory.
-#html_theme_path = ['_theme']
+# html_theme_path = ['_theme']
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'observabilityclientdoc'
@@ -114,9 +115,9 @@ htmlhelp_basename = 'observabilityclientdoc'
 latex_documents = [
     ('index',
      'observabilityclient.tex',
-     u'observabilityclient Documentation',
-     u'OpenStack Foundation', 'manual'),
+     'observabilityclient Documentation',
+     'OpenStack Foundation', 'manual'),
 ]
 
 # Example configuration for intersphinx: refer to the Python standard library.
-#intersphinx_mapping = {'http://docs.python.org/': None}
+# intersphinx_mapping = {'http://docs.python.org/': None}

@@ -59,7 +59,7 @@ def build_option_parser(parser):
     parser.add_argument(
         '--os-observability-api-version',
         metavar='<observability-api-version>',
-        help='Observability Plugin API version, default='
-             + DEFAULT_API_VERSION
-             + ' (Env: OS_OSCPLUGIN_API_VERSION)')
+        help='Observability Plugin API version, default=' +
+             DEFAULT_API_VERSION +
+             ' (Env: OS_OSCPLUGIN_API_VERSION)')
     return parser

@@ -40,8 +40,7 @@ class PromQLRbac:
 
     def _find_label_value_end(self, query, start, quote_char):
         end = start
-        while (end == start or
-               query[end - 1] == '\\'):
+        while (end == start or query[end - 1] == '\\'):
             # Looking for first unescaped quotes
             end = query.find(quote_char, end + 1)
         # returns the quote position or -1

@@ -1,3 +1,49 @@
 [build-system]
 requires = ['setuptools>=68']
 build-backend = 'setuptools.build_meta'
+
+[project]
+name = "python-observabilityclient"
+description = "OpenStack Observability Client"
+authors = [
+    {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
+]
+readme = {file = "README.rst", content-type = "text/markdown; charset=UTF-8"}
+license = {text = "Apache-2.0"}
+dynamic = ["version", "dependencies"]
+requires-python = ">=3.10"
+classifiers = [
+  "Environment :: Console",
+  "Environment :: OpenStack",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+[tool.setuptools]
+packages = [
+    "observabilityclient"
+]
+
+[project.scripts]
+aodh = "aodhclient.shell:main"
+
+[project.entry-points."openstack.cli.extension"]
+observabilityclient = "observabilityclient.plugin"
+
+[project.entry-points."openstack.observabilityclient.v1"]
+metric_list = "observabilityclient.v1.cli:List"
+metric_show = "observabilityclient.v1.cli:Show"
+metric_query = "observabilityclient.v1.cli:Query"
+metric_delete = "observabilityclient.v1.cli:Delete"
+metric_clean-tombstones = "observabilityclient.v1.cli:CleanTombstones"
+metric_snapshot = "observabilityclient.v1.cli:Snapshot"

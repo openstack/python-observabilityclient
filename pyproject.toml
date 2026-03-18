@@ -34,9 +34,6 @@ packages = [
     "observabilityclient"
 ]
 
-[project.scripts]
-aodh = "aodhclient.shell:main"
-
 [project.entry-points."openstack.cli.extension"]
 observabilityclient = "observabilityclient.plugin"
 

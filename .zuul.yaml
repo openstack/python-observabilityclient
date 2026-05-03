@@ -7,9 +7,10 @@
       Devstack-based functional tests for observabilityclient.
     required-projects:
       - openstack/python-observabilityclient
+      - openstack/aetos
       - openstack/ceilometer
-      - openstack-k8s-operators/sg-core
       - openstack/devstack-plugin-prometheus
+      - openstack-k8s-operators/sg-core
     timeout: 4200
     vars:
       devstack_localrc:
@@ -17,9 +18,10 @@
         CEILOMETER_BACKEND: sg-core
         PROMETHEUS_CUSTOM_SCRAPE_TARGETS: "localhost:3000,localhost:9090"
       devstack_plugins:
-        sg-core: https://github.com/openstack-k8s-operators/sg-core
+        aetos: https://opendev.org/openstack/aetos
         ceilometer: https://opendev.org/openstack/ceilometer
         devstack-plugin-prometheus: https://opendev.org/openstack/devstack-plugin-prometheus
+        sg-core: https://github.com/openstack-k8s-operators/sg-core
       devstack_services:
         node_exporter: false
       zuul_copy_output:

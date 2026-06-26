@@ -59,18 +59,14 @@ def get_prom_client_from_keystone(session, adapter_options=None):
 
     escaped_host = netutils.escape_ipv6(parsed_url.hostname)
     root_path = parsed_url.path.strip('/')
-    tls = parsed_url.scheme == "https"
 
     if parsed_url.port is not None:
         url = f'{escaped_host}:{parsed_url.port}'
     else:
         url = escaped_host
 
-    client = PrometheusAPIClient(url, session, root_path)
-
-    if tls:
-        client.set_ca_cert(True)
-    return client
+    return PrometheusAPIClient(
+        url, session, root_path, scheme=parsed_url.scheme)
 
 
 def get_prom_client_from_file_or_env():

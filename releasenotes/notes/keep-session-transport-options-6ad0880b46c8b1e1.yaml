@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Preserve transport options (such as ``verify`` / ``insecure``) on a
+    pre-created Keystone session when talking to Aetos. Previously, TLS
+    verification was forced on solely from the endpoint URL scheme, which
+    prevented using observabilityclient against endpoints with self-signed
+    certificates configured via ``clouds.yaml`` / openstackclient.

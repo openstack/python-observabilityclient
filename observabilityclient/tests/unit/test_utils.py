@@ -115,7 +115,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                                   "set_ca_cert") as ca_m:
             metric_utils.get_prometheus_client(keystone_session)
         init_m.assert_called_with(
-            "localhost:1234", keystone_session, "prometheus"
+            "localhost:1234", keystone_session, "prometheus", scheme="http"
         )
         ca_m.assert_not_called()
 
@@ -133,9 +133,11 @@ class GetPrometheusClientTest(testtools.TestCase):
                                   "set_ca_cert") as ca_m:
             metric_utils.get_prometheus_client(keystone_session)
         init_m.assert_called_with(
-            "localhost:1234", keystone_session, "prometheus"
+            "localhost:1234", keystone_session, "prometheus", scheme="https"
         )
-        ca_m.assert_called_with(True)
+        # Session transport options (verify/insecure) must be preserved;
+        # do not override them based on the endpoint URL scheme.
+        ca_m.assert_not_called()
 
     def test_get_prometheus_client_from_env_vars_ipv6(self):
         patched_env = {'PROMETHEUS_HOST': '2607:5300:201:2000::654',
@@ -178,7 +180,8 @@ class GetPrometheusClientTest(testtools.TestCase):
                                   "set_ca_cert") as ca_m:
             metric_utils.get_prometheus_client(keystone_session)
         init_m.assert_called_with(
-            "[2607:5300:201:2000::654]:80", keystone_session, "prometheus"
+            "[2607:5300:201:2000::654]:80", keystone_session, "prometheus",
+            scheme="http"
         )
         ca_m.assert_not_called()
 

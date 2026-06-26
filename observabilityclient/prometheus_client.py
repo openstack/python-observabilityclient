@@ -53,15 +53,16 @@ class PrometheusMetric:
 
 
 class PrometheusAPIClient:
-    def __init__(self, host, session=None, root_path=""):
+    def __init__(self, host, session=None, root_path="", scheme=None):
+        self._scheme = scheme
         self._host = host
         if not self._host.endswith('/'):
             self._host += '/'
         if session is None:
             self._session = requests.Session()
+            self._session.verify = False
         else:
             self._session = session
-        self._session.verify = False
         self._root_path = root_path
         if root_path != "" and not self._root_path.endswith('/'):
             self._root_path += '/'
@@ -76,7 +77,10 @@ class PrometheusAPIClient:
         self._session.auth = (auth_user, auth_password)
 
     def _get_url(self, endpoint):
-        scheme = 'https' if self._session.verify else 'http'
+        if self._scheme is None:
+            scheme = 'https' if self._session.verify else 'http'
+        else:
+            scheme = self._scheme
         return f"{scheme}://{self._host}{self._root_path}api/v1/{endpoint}"
 
     def _get(self, endpoint, params=None):

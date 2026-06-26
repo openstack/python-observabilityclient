@@ -83,6 +83,34 @@ class PrometheusAPIClientTestBase(testtools.TestCase):
 
 
 class PrometheusAPIClientTest(PrometheusAPIClientTestBase):
+    def test_init_scheme_default(self):
+        c = client.PrometheusAPIClient("localhost:9090")
+        self.assertIsNone(c._scheme)
+
+    def test_init_scheme_passed(self):
+        c = client.PrometheusAPIClient("localhost:9090", scheme="https")
+        self.assertEqual("https", c._scheme)
+
+    def test_get_url_without_scheme_uses_verify(self):
+        c = client.PrometheusAPIClient("localhost:9090")
+        c._session.verify = False
+        self.assertEqual("http://localhost:9090/api/v1/query",
+                         c._get_url("query"))
+        c._session.verify = True
+        self.assertEqual("https://localhost:9090/api/v1/query",
+                         c._get_url("query"))
+
+    def test_get_url_with_scheme_ignores_verify(self):
+        c = client.PrometheusAPIClient("localhost:9090", scheme="https")
+        c._session.verify = False
+        self.assertEqual("https://localhost:9090/api/v1/query",
+                         c._get_url("query"))
+
+        c = client.PrometheusAPIClient("localhost:9090", scheme="http")
+        c._session.verify = True
+        self.assertEqual("http://localhost:9090/api/v1/query",
+                         c._get_url("query"))
+
     def test_get(self):
         url = "test"
         root_path = "root_path"

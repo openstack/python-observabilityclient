@@ -57,7 +57,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("somehost:1234", None, "")
+        m.assert_called_with("somehost:1234", None, None)
 
     def test_get_prometheus_client_env_override(self):
         with mock.patch.dict(os.environ,
@@ -67,7 +67,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("env_override:1234", None, "")
+        m.assert_called_with("env_override:1234", None, None)
 
     def test_get_prometheus_client_no_config_file(self):
         patched_env = {'PROMETHEUS_HOST': 'env_override',
@@ -78,7 +78,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("env_override:env_port", None, "")
+        m.assert_called_with("env_override:env_port", None, None)
 
     def test_get_prometheus_client_prefix_in_env_variable(self):
         patched_env = {'PROMETHEUS_HOST': 'env_override',
@@ -148,7 +148,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                 mock.patch.object(prometheus_client.PrometheusAPIClient,
                                   "__init__", return_value=None) as m:
             metric_utils.get_prometheus_client()
-        m.assert_called_with("[2607:5300:201:2000::654]:1234", None, "")
+        m.assert_called_with("[2607:5300:201:2000::654]:1234", None, None)
 
     def test_get_prometheus_client_from_conf_file_ipv6(self):
         config_data = '''
@@ -163,7 +163,7 @@ class GetPrometheusClientTest(testtools.TestCase):
                                   "__init__", return_value=None) as init_m:
             metric_utils.get_prometheus_client()
         init_m.assert_called_with(
-            "[2607:5300:201:2000::654]:80", None, ""
+            "[2607:5300:201:2000::654]:80", None, None
         )
 
     def test_get_prometheus_client_from_keystone_ipv6(self):

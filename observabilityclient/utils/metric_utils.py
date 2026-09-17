@@ -70,32 +70,30 @@ def get_prom_client_from_keystone(session, adapter_options=None):
 
 
 def get_prom_client_from_file_or_env():
-    host = port = ca_cert = None
-    root_path = ''
-    conf_file = get_config_file()
-    if conf_file is not None:
-        conf = yaml.safe_load(conf_file)
-        if 'host' in conf:
-            host = conf['host']
-        if 'port' in conf:
-            port = conf['port']
-        if 'ca_cert' in conf:
-            ca_cert = conf['ca_cert']
-        if 'root_path' in conf:
-            root_path = conf['root_path']
-        conf_file.close()
-    if 'PROMETHEUS_HOST' in os.environ:
-        host = os.environ['PROMETHEUS_HOST']
-    if 'PROMETHEUS_PORT' in os.environ:
-        port = os.environ['PROMETHEUS_PORT']
-    if 'PROMETHEUS_CA_CERT' in os.environ:
-        ca_cert = os.environ['PROMETHEUS_CA_CERT']
-    if 'PROMETHEUS_ROOT_PATH' in os.environ:
-        root_path = os.environ['PROMETHEUS_ROOT_PATH']
-    if host is None or port is None:
-        raise ConfigurationError("Can't find prometheus host and "
-                                 "port configuration in config file or "
-                                 "environment variables.")
+    host = ca_cert = root_path = None
+    port = 9090
+    try:
+        conf_file = get_config_file()
+        if conf_file is not None:
+            conf = yaml.safe_load(conf_file)
+            host = conf.get('host', host)
+            port = conf.get('port', port)
+            ca_cert = conf.get('ca_cert', ca_cert)
+            root_path = conf.get('root_path', root_path)
+    finally:
+        if conf_file is not None:
+            conf_file.close()
+
+    host = os.environ.get('PROMETHEUS_HOST', host)
+    port = os.environ.get('PROMETHEUS_PORT', port)
+    ca_cert = os.environ.get('PROMETHEUS_CA_CERT', ca_cert)
+    root_path = os.environ.get('PROMETHEUS_ROOT_PATH', root_path)
+
+    if host is None:
+        raise ConfigurationError(
+            "Can't find prometheus host configuration in config file or "
+            "environment variables.")
+
     escaped_host = netutils.escape_ipv6(host)
     client = PrometheusAPIClient(
         f"{escaped_host}:{port}", None, root_path

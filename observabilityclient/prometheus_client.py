@@ -14,6 +14,7 @@
 
 import logging
 import ssl
+import urllib.parse
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -80,19 +81,16 @@ class PrometheusMetric:
 
 
 class PrometheusAPIClient:
-    def __init__(self, host, session=None, root_path="", scheme=None):
+    def __init__(self, host, session=None, root_path=None, scheme=None):
         self._scheme = scheme
         self._host = host
-        if not self._host.endswith('/'):
-            self._host += '/'
+        self._root_path = root_path or ''
+
         if session is None:
             self._session = requests.Session()
             self._session.verify = False
         else:
             self._session = session
-        self._root_path = root_path
-        if root_path != "" and not self._root_path.endswith('/'):
-            self._root_path += '/'
         self._min_tls_version = None
 
     def set_ca_cert(self, ca_cert):
@@ -129,7 +127,11 @@ class PrometheusAPIClient:
             scheme = 'https' if self._session.verify else 'http'
         else:
             scheme = self._scheme
-        return f"{scheme}://{self._host}{self._root_path}api/v1/{endpoint}"
+        components = (scheme, self._host, self._root_path, '', '')
+        base_url = urllib.parse.urlunsplit(components)
+        if not base_url.endswith('/'):
+            base_url += '/'
+        return urllib.parse.urljoin(base_url, f'api/v1/{endpoint}')
 
     def _get(self, endpoint, params=None):
         url = self._get_url(endpoint)

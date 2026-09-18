@@ -13,11 +13,38 @@
 #   under the License.
 
 import logging
+import ssl
 
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.ssl_ import create_urllib3_context
 
 
 LOG = logging.getLogger(__name__)
+
+
+_TLS_VERSIONS = {
+    '1.2': ssl.TLSVersion.TLSv1_2,
+    '1.3': ssl.TLSVersion.TLSv1_3,
+}
+
+
+class _PrometheusTLSAdapter(HTTPAdapter):
+    """HTTP adapter pinning a minimum TLS version on new connections."""
+
+    def __init__(self, min_version, verify, **kwargs):
+        self._min_version = min_version
+        # requests/urllib3 set verify_mode and load the CA bundle per request,
+        # but CERT_NONE on a context with check_hostname enabled raises, so the
+        # context has to be built knowing whether we verify.
+        self._cert_reqs = None if verify else ssl.CERT_NONE
+        super().__init__(**kwargs)
+
+    def init_poolmanager(self, *args, **kwargs):
+        kwargs['ssl_context'] = create_urllib3_context(
+            ssl_minimum_version=self._min_version,
+            cert_reqs=self._cert_reqs)
+        return super().init_poolmanager(*args, **kwargs)
 
 
 class PrometheusAPIClientError(Exception):
@@ -66,9 +93,30 @@ class PrometheusAPIClient:
         self._root_path = root_path
         if root_path != "" and not self._root_path.endswith('/'):
             self._root_path += '/'
+        self._min_tls_version = None
 
     def set_ca_cert(self, ca_cert):
         self._session.verify = ca_cert
+        self._mount_tls_adapter()
+
+    def set_min_tls_version(self, version):
+        """Set the minimum TLS version for HTTPS connections to Prometheus.
+
+        :param version: TLS version, ``1.2`` or ``1.3``
+        :type version: str
+        """
+        if version not in _TLS_VERSIONS:
+            raise ValueError(
+                f"Unknown TLS version: {version}. Supported values are "
+                f"{', '.join(sorted(_TLS_VERSIONS))}")
+        self._min_tls_version = _TLS_VERSIONS[version]
+        self._mount_tls_adapter()
+
+    def _mount_tls_adapter(self):
+        if self._min_tls_version is None:
+            return
+        self._session.mount('https://', _PrometheusTLSAdapter(
+            self._min_tls_version, self._session.verify))
 
     def set_client_cert(self, client_cert, client_key):
         self._session.cert = (client_cert, client_key)

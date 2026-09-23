@@ -112,6 +112,35 @@ class PrometheusAPIClientTest(PrometheusAPIClientTestBase):
         self.assertRaises(ValueError, c.set_min_tls_version, "TLSv1_2")
         self.assertRaises(ValueError, c.set_min_tls_version, "1.1")
 
+    def test_set_max_tls_version(self):
+        c = client.PrometheusAPIClient("localhost:9090")
+        c.set_max_tls_version("1.2")
+        ctx = self._ssl_context(c)
+        self.assertEqual(ssl.TLSVersion.TLSv1_2, ctx.maximum_version)
+        self.assertEqual(ssl.CERT_NONE, ctx.verify_mode)
+
+    def test_set_max_tls_version_with_ca_cert(self):
+        c = client.PrometheusAPIClient("localhost:9090")
+        c.set_ca_cert(True)
+        c.set_max_tls_version("1.3")
+        ctx = self._ssl_context(c)
+        self.assertEqual(ssl.TLSVersion.TLSv1_3, ctx.maximum_version)
+        self.assertEqual(ssl.CERT_REQUIRED, ctx.verify_mode)
+        self.assertTrue(ctx.check_hostname)
+
+    def test_set_min_and_max_tls_version(self):
+        c = client.PrometheusAPIClient("localhost:9090")
+        c.set_min_tls_version("1.2")
+        c.set_max_tls_version("1.3")
+        ctx = self._ssl_context(c)
+        self.assertEqual(ssl.TLSVersion.TLSv1_2, ctx.minimum_version)
+        self.assertEqual(ssl.TLSVersion.TLSv1_3, ctx.maximum_version)
+
+    def test_set_max_tls_version_invalid(self):
+        c = client.PrometheusAPIClient("localhost:9090")
+        self.assertRaises(ValueError, c.set_max_tls_version, "TLSv1_2")
+        self.assertRaises(ValueError, c.set_max_tls_version, "1.1")
+
     def test_init_scheme_default(self):
         c = client.PrometheusAPIClient("localhost:9090")
         self.assertIsNone(c._scheme)

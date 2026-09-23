@@ -31,10 +31,11 @@ _TLS_VERSIONS = {
 
 
 class _PrometheusTLSAdapter(HTTPAdapter):
-    """HTTP adapter pinning a minimum TLS version on new connections."""
+    """HTTP adapter pinning TLS version bounds on new connections."""
 
-    def __init__(self, min_version, verify, **kwargs):
+    def __init__(self, min_version, max_version, verify, **kwargs):
         self._min_version = min_version
+        self._max_version = max_version
         # requests/urllib3 set verify_mode and load the CA bundle per request,
         # but CERT_NONE on a context with check_hostname enabled raises, so the
         # context has to be built knowing whether we verify.
@@ -44,8 +45,17 @@ class _PrometheusTLSAdapter(HTTPAdapter):
     def init_poolmanager(self, *args, **kwargs):
         kwargs['ssl_context'] = create_urllib3_context(
             ssl_minimum_version=self._min_version,
+            ssl_maximum_version=self._max_version,
             cert_reqs=self._cert_reqs)
         return super().init_poolmanager(*args, **kwargs)
+
+
+def _resolve_tls_version(version):
+    if version not in _TLS_VERSIONS:
+        raise ValueError(
+            f"Unknown TLS version: {version}. Supported values are "
+            f"{', '.join(sorted(_TLS_VERSIONS))}")
+    return _TLS_VERSIONS[version]
 
 
 class PrometheusAPIClientError(Exception):
@@ -92,6 +102,7 @@ class PrometheusAPIClient:
         else:
             self._session = session
         self._min_tls_version = None
+        self._max_tls_version = None
 
     def set_ca_cert(self, ca_cert):
         self._session.verify = ca_cert
@@ -103,18 +114,24 @@ class PrometheusAPIClient:
         :param version: TLS version, ``1.2`` or ``1.3``
         :type version: str
         """
-        if version not in _TLS_VERSIONS:
-            raise ValueError(
-                f"Unknown TLS version: {version}. Supported values are "
-                f"{', '.join(sorted(_TLS_VERSIONS))}")
-        self._min_tls_version = _TLS_VERSIONS[version]
+        self._min_tls_version = _resolve_tls_version(version)
+        self._mount_tls_adapter()
+
+    def set_max_tls_version(self, version):
+        """Set the maximum TLS version for HTTPS connections to Prometheus.
+
+        :param version: TLS version, ``1.2`` or ``1.3``
+        :type version: str
+        """
+        self._max_tls_version = _resolve_tls_version(version)
         self._mount_tls_adapter()
 
     def _mount_tls_adapter(self):
-        if self._min_tls_version is None:
+        if self._min_tls_version is None and self._max_tls_version is None:
             return
         self._session.mount('https://', _PrometheusTLSAdapter(
-            self._min_tls_version, self._session.verify))
+            self._min_tls_version, self._max_tls_version,
+            self._session.verify))
 
     def set_client_cert(self, client_cert, client_key):
         self._session.cert = (client_cert, client_key)

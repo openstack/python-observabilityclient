@@ -17,6 +17,7 @@ Install your OpenStack environment and patch your ``openstack`` client
 application using python.
 
 .. code:: console
+
     git clone https://opendev.org/openstack/python-observabilityclient.git
     cd python-observabilityclient
     sudo pip install .
@@ -30,6 +31,7 @@ Use ``openstack metric query somequery`` to query for metrics in prometheus.
 To use the python api do the following:
 
 .. code:: python
+
     from observabilityclient import client
 
     c = client.Client(
